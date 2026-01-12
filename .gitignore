@@ -1,0 +1,43 @@
+# Uploads directory
+uploads/
+*.wav
+*.mp3
+*.mp4
+*.avi
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.metadata/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application
+application-local.properties
+application-prod.properties
