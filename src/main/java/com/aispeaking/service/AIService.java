@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -121,7 +120,7 @@ public class AIService {
             originalFilename.substring(originalFilename.lastIndexOf(".")) : ".wav";
         String filename = UUID.randomUUID().toString() + extension;
         
-        Path filePath = Paths.get(UPLOAD_DIR + filename);
+        Path filePath = Path.of(UPLOAD_DIR + filename);
         Files.write(filePath, audioFile.getBytes());
         
         return filePath.toString();

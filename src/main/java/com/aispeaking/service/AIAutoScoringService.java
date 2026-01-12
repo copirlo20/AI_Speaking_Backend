@@ -552,8 +552,8 @@ public class AIAutoScoringService {
 
     private Double getDoubleValue(Map<String, Object> map, String key) {
         Object value = map.get(key);
-        if (value instanceof Number) {
-            return ((Number) value).doubleValue();
+        if (value instanceof Number number) {
+            return number.doubleValue();
         }
         return 0.0;
     }
