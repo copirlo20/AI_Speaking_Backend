@@ -1,15 +1,42 @@
 package com.aispeaking.repository;
 
-import com.aispeaking.model.Question;
+import com.aispeaking.entity.Question;
+import com.aispeaking.entity.enums.QuestionLevel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
-    List<Question> findByType(Question.QuestionType type);
-    List<Question> findByDifficulty(Question.DifficultyLevel difficulty);
-    List<Question> findByTopic(String topic);
-    List<Question> findByActiveTrue();
+    
+    Page<Question> findByDeletedAtIsNull(Pageable pageable);
+    
+    Page<Question> findByLevelAndDeletedAtIsNull(QuestionLevel level, Pageable pageable);
+    
+    @Query("SELECT q FROM Question q WHERE q.deletedAt IS NULL " +
+           "AND (:level IS NULL OR q.level = :level) " +
+           "AND (:category IS NULL OR q.category = :category) " +
+           "AND (:fromDate IS NULL OR q.createdAt >= :fromDate) " +
+           "AND (:toDate IS NULL OR q.createdAt <= :toDate)")
+    Page<Question> findByCriteria(
+        @Param("level") QuestionLevel level,
+        @Param("category") String category,
+        @Param("fromDate") LocalDateTime fromDate,
+        @Param("toDate") LocalDateTime toDate,
+        Pageable pageable
+    );
+    
+    @Query("SELECT q FROM Question q WHERE q.deletedAt IS NULL " +
+           "AND (:level IS NULL OR q.level = :level) " +
+           "ORDER BY RAND()")
+    List<Question> findRandomQuestions(
+        @Param("level") QuestionLevel level,
+        Pageable pageable
+    );
 }

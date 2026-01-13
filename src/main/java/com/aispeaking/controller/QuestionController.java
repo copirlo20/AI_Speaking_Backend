@@ -1,77 +1,68 @@
 package com.aispeaking.controller;
 
-import com.aispeaking.model.Question;
+import com.aispeaking.entity.Question;
+import com.aispeaking.entity.enums.QuestionLevel;
 import com.aispeaking.service.QuestionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/questions")
+@RequestMapping("/questions")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${cors.allowed.origins}")
 public class QuestionController {
 
     private final QuestionService questionService;
 
-    @PostMapping
-    public ResponseEntity<Question> createQuestion(@Valid @RequestBody Question question) {
-        Question createdQuestion = questionService.createQuestion(question);
-        return ResponseEntity.ok(createdQuestion);
-    }
-
     @GetMapping
-    public ResponseEntity<List<Question>> getAllQuestions() {
-        return ResponseEntity.ok(questionService.getAllQuestions());
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<List<Question>> getActiveQuestions() {
-        return ResponseEntity.ok(questionService.getActiveQuestions());
+    public ResponseEntity<Page<Question>> getAllQuestions(Pageable pageable) {
+        return ResponseEntity.ok(questionService.getAllQuestions(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getQuestionById(@PathVariable Long id) {
-        return questionService.getQuestionById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Question> getQuestionById(@PathVariable Long id) {
+        return ResponseEntity.ok(questionService.getQuestionById(id));
     }
 
-    @GetMapping("/type/{type}")
-    public ResponseEntity<List<Question>> getQuestionsByType(@PathVariable Question.QuestionType type) {
-        return ResponseEntity.ok(questionService.getQuestionsByType(type));
+    @GetMapping("/search")
+    public ResponseEntity<Page<Question>> searchQuestions(
+            @RequestParam(required = false) QuestionLevel level,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            Pageable pageable) {
+        return ResponseEntity.ok(questionService.searchQuestions(level, category, fromDate, toDate, pageable));
     }
 
-    @GetMapping("/difficulty/{difficulty}")
-    public ResponseEntity<List<Question>> getQuestionsByDifficulty(@PathVariable Question.DifficultyLevel difficulty) {
-        return ResponseEntity.ok(questionService.getQuestionsByDifficulty(difficulty));
+    @GetMapping("/random")
+    public ResponseEntity<List<Question>> getRandomQuestions(
+            @RequestParam(required = false) QuestionLevel level,
+            @RequestParam(defaultValue = "10") int count) {
+        return ResponseEntity.ok(questionService.getRandomQuestions(level, count));
     }
 
-    @GetMapping("/topic/{topic}")
-    public ResponseEntity<List<Question>> getQuestionsByTopic(@PathVariable String topic) {
-        return ResponseEntity.ok(questionService.getQuestionsByTopic(topic));
+    @PostMapping
+    public ResponseEntity<Question> createQuestion(@RequestBody Question question) {
+        return ResponseEntity.ok(questionService.createQuestion(question));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateQuestion(@PathVariable Long id, @Valid @RequestBody Question questionDetails) {
-        try {
-            Question updatedQuestion = questionService.updateQuestion(id, questionDetails);
-            return ResponseEntity.ok(updatedQuestion);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Question> updateQuestion(
+            @PathVariable Long id,
+            @RequestBody Question question) {
+        return ResponseEntity.ok(questionService.updateQuestion(id, question));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteQuestion(@PathVariable Long id) {
-        try {
-            questionService.deleteQuestion(id);
-            return ResponseEntity.ok().body("Question deleted successfully");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Void> deleteQuestion(@PathVariable Long id) {
+        questionService.deleteQuestion(id);
+        return ResponseEntity.noContent().build();
     }
 }

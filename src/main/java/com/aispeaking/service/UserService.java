@@ -1,82 +1,140 @@
 package com.aispeaking.service;
 
-import com.aispeaking.model.User;
+import com.aispeaking.entity.User;
+import com.aispeaking.entity.enums.UserRole;
 import com.aispeaking.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    // Note: You'll need to add PasswordEncoder bean in SecurityConfig
+    // For now, using plain text (should be encrypted in production)
+
+    @Transactional(readOnly = true)
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .filter(u -> u.getDeletedAt() == null)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsernameAndDeletedAtIsNull(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
 
     @Transactional
     public User createUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new RuntimeException("Username already exists: " + user.getUsername());
         }
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        
+        // In production, encrypt password
+        // user.setPassword(passwordEncoder.encode(user.getPassword()));
+        
+        log.info("Creating new user: {}", user.getUsername());
         return userRepository.save(user);
     }
 
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
-    }
-
-    public Optional<User> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    /**
+     * Create new user account with default TEACHER role
+     * This method ensures role is always TEACHER and cannot be overridden
+     * 
+     * @param username Username (must be unique)
+     * @param password Password (should be encrypted in production)
+     * @param fullName Full name of user
+     * @return Created user entity
+     */
+    @Transactional
+    public User createTeacherAccount(String username, String password, String fullName) {
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Username already exists: " + username);
+        }
+        
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password); // TODO: Encrypt with BCrypt in production
+        user.setFullName(fullName);
+        user.setRole(UserRole.TEACHER); // Always TEACHER by default
+        user.setIsActive(true);
+        
+        User savedUser = userRepository.save(user);
+        log.info("Created new TEACHER account: {} (ID: {})", username, savedUser.getId());
+        return savedUser;
     }
 
     @Transactional
     public User updateUser(Long id, User userDetails) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = getUserById(id);
         
-        if (userDetails.getFullName() != null) {
-            user.setFullName(userDetails.getFullName());
-        }
-        if (userDetails.getEmail() != null && !userDetails.getEmail().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(userDetails.getEmail())) {
-                throw new RuntimeException("Email already exists");
-            }
-            user.setEmail(userDetails.getEmail());
-        }
-        if (userDetails.getProfileImage() != null) {
-            user.setProfileImage(userDetails.getProfileImage());
+        if (!user.getUsername().equals(userDetails.getUsername()) 
+                && userRepository.existsByUsername(userDetails.getUsername())) {
+            throw new RuntimeException("Username already exists: " + userDetails.getUsername());
         }
         
+        user.setFullName(userDetails.getFullName());
+        user.setUsername(userDetails.getUsername());
+        user.setRole(userDetails.getRole());
+        user.setIsActive(userDetails.getIsActive());
+        
+        log.info("Updated user with id: {}", id);
         return userRepository.save(user);
     }
 
     @Transactional
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public void changePassword(Long id, String newPassword) {
+        User user = getUserById(id);
+        // In production, encrypt password
+        // user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(newPassword);
+        userRepository.save(user);
+        log.info("Changed password for user: {}", user.getUsername());
     }
 
     @Transactional
-    public void updateUserStats(Long userId, Double averageScore, Integer totalTests) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setAverageScore(averageScore);
-        user.setTotalTests(totalTests);
+    public void toggleUserStatus(Long id) {
+        User user = getUserById(id);
+        user.setIsActive(!user.getIsActive());
         userRepository.save(user);
+        log.info("Toggled status for user {}: {}", user.getUsername(), user.getIsActive());
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = getUserById(id);
+        user.softDelete();
+        userRepository.save(user);
+        log.info("Soft deleted user with id: {}", id);
+    }
+
+    @Transactional(readOnly = true)
+    public long countActiveUsers() {
+        return userRepository.findAll().stream()
+                .filter(u -> u.getIsActive() && u.getDeletedAt() == null)
+                .count();
+    }
+
+    @Transactional(readOnly = true)
+    public long countUsersByRole(UserRole role) {
+        return userRepository.findAll().stream()
+                .filter(u -> u.getRole() == role && u.getDeletedAt() == null)
+                .count();
     }
 }

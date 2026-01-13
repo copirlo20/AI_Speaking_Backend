@@ -1,69 +1,76 @@
 package com.aispeaking.service;
 
-import com.aispeaking.model.Question;
+import com.aispeaking.entity.Question;
+import com.aispeaking.entity.enums.QuestionLevel;
 import com.aispeaking.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QuestionService {
 
     private final QuestionRepository questionRepository;
 
+    @Transactional(readOnly = true)
+    public Page<Question> getAllQuestions(Pageable pageable) {
+        return questionRepository.findByDeletedAtIsNull(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Question getQuestionById(Long id) {
+        return questionRepository.findById(id)
+                .filter(q -> q.getDeletedAt() == null)
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Question> searchQuestions(
+            QuestionLevel level,
+            String category,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Pageable pageable) {
+        return questionRepository.findByCriteria(level, category, fromDate, toDate, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Question> getRandomQuestions(QuestionLevel level, int count) {
+        return questionRepository.findRandomQuestions(
+                level,
+                Pageable.ofSize(count)
+        );
+    }
+
     @Transactional
     public Question createQuestion(Question question) {
+        log.info("Creating new question: {}", question.getContent());
         return questionRepository.save(question);
-    }
-
-    public Optional<Question> getQuestionById(Long id) {
-        return questionRepository.findById(id);
-    }
-
-    public List<Question> getAllQuestions() {
-        return questionRepository.findAll();
-    }
-
-    public List<Question> getActiveQuestions() {
-        return questionRepository.findByActiveTrue();
-    }
-
-    public List<Question> getQuestionsByType(Question.QuestionType type) {
-        return questionRepository.findByType(type);
-    }
-
-    public List<Question> getQuestionsByDifficulty(Question.DifficultyLevel difficulty) {
-        return questionRepository.findByDifficulty(difficulty);
-    }
-
-    public List<Question> getQuestionsByTopic(String topic) {
-        return questionRepository.findByTopic(topic);
     }
 
     @Transactional
     public Question updateQuestion(Long id, Question questionDetails) {
-        Question question = questionRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Question not found"));
-        
-        question.setQuestionText(questionDetails.getQuestionText());
-        question.setSampleAnswer(questionDetails.getSampleAnswer());
-        question.setType(questionDetails.getType());
-        question.setDifficulty(questionDetails.getDifficulty());
-        question.setTopic(questionDetails.getTopic());
-        question.setEvaluationCriteria(questionDetails.getEvaluationCriteria());
-        question.setTimeLimit(questionDetails.getTimeLimit());
-        question.setPreparationTime(questionDetails.getPreparationTime());
-        question.setActive(questionDetails.isActive());
-        
+        Question question = getQuestionById(id);
+        question.setContent(questionDetails.getContent());
+        question.setLevel(questionDetails.getLevel());
+        question.setCategory(questionDetails.getCategory());
+        log.info("Updated question with id: {}", id);
         return questionRepository.save(question);
     }
 
     @Transactional
     public void deleteQuestion(Long id) {
-        questionRepository.deleteById(id);
+        Question question = getQuestionById(id);
+        question.softDelete();
+        questionRepository.save(question);
+        log.info("Soft deleted question with id: {}", id);
     }
 }
