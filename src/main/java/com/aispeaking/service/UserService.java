@@ -80,6 +80,43 @@ public class UserService {
         return savedUser;
     }
 
+    /**
+     * Login user with username and password
+     * 
+     * @param username Username
+     * @param password Plain text password
+     * @return User entity if login successful
+     * @throws RuntimeException if credentials are invalid or account is inactive
+     */
+    @Transactional(readOnly = true)
+    public User login(String username, String password) {
+        User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
+                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+        
+        // TODO: Use passwordEncoder.matches() in production
+        if (!user.getPassword().equals(password)) {
+            throw new RuntimeException("Invalid username or password");
+        }
+        
+        if (!user.getIsActive()) {
+            throw new RuntimeException("Account is inactive");
+        }
+        
+        log.info("User {} logged in successfully", username);
+        return user;
+    }
+
+    /**
+     * Check if username exists
+     * 
+     * @param username Username to check
+     * @return true if username exists, false otherwise
+     */
+    @Transactional(readOnly = true)
+    public boolean usernameExists(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
     @Transactional
     public User updateUser(Long id, User userDetails) {
         User user = getUserById(id);
