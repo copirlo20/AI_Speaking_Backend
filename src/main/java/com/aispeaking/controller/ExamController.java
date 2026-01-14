@@ -1,17 +1,18 @@
 package com.aispeaking.controller;
 
-import com.aispeaking.entity.Exam;
-import com.aispeaking.entity.ExamQuestion;
-import com.aispeaking.entity.enums.QuestionLevel;
+import com.aispeaking.dto.*;
+import com.aispeaking.entity.enums.ExamStatus;
 import com.aispeaking.service.ExamService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/exams")
@@ -22,25 +23,35 @@ public class ExamController {
     private final ExamService examService;
 
     @GetMapping
-    public ResponseEntity<Page<Exam>> getAllExams(Pageable pageable) {
+    public ResponseEntity<Page<ExamResponse>> getAllExams(Pageable pageable) {
         return ResponseEntity.ok(examService.getAllExams(pageable));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<ExamResponse>> searchExams(
+            @RequestParam(required = false) ExamStatus status,
+            @RequestParam(required = false) Long createdBy,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            Pageable pageable) {
+        return ResponseEntity.ok(examService.searchExams(status, createdBy, fromDate, toDate, pageable));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Exam> getExamById(@PathVariable Long id) {
+    public ResponseEntity<ExamResponse> getExamById(@PathVariable Long id) {
         return ResponseEntity.ok(examService.getExamById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Exam> createExam(@RequestBody Exam exam) {
-        return ResponseEntity.ok(examService.createExam(exam));
+    public ResponseEntity<ExamResponse> createExam(@Valid @RequestBody CreateExamRequest request) {
+        return ResponseEntity.ok(examService.createExam(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Exam> updateExam(
+    public ResponseEntity<ExamResponse> updateExam(
             @PathVariable Long id,
-            @RequestBody Exam exam) {
-        return ResponseEntity.ok(examService.updateExam(id, exam));
+            @Valid @RequestBody UpdateExamRequest request) {
+        return ResponseEntity.ok(examService.updateExam(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -52,26 +63,21 @@ public class ExamController {
     @PostMapping("/{id}/questions")
     public ResponseEntity<Void> addQuestionsToExam(
             @PathVariable Long id,
-            @RequestBody List<Long> questionIds) {
-        examService.addQuestionsToExam(id, questionIds);
+            @Valid @RequestBody AddQuestionsToExamRequest request) {
+        examService.addQuestionsToExam(id, request.getQuestionIds());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/generate-random")
     public ResponseEntity<Void> generateRandomExam(
             @PathVariable Long id,
-            @RequestBody Map<String, Object> params) {
-        QuestionLevel level = params.containsKey("level") 
-                ? QuestionLevel.valueOf(params.get("level").toString()) 
-                : null;
-        int count = Integer.parseInt(params.get("count").toString());
-        
-        examService.generateRandomExam(id, level, count);
+            @Valid @RequestBody GenerateRandomExamRequest request) {
+        examService.generateRandomExam(id, request.getLevel(), request.getCount());
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}/questions")
-    public ResponseEntity<List<ExamQuestion>> getExamQuestions(@PathVariable Long id) {
+    public ResponseEntity<List<ExamQuestionResponse>> getExamQuestions(@PathVariable Long id) {
         return ResponseEntity.ok(examService.getExamQuestions(id));
     }
 }

@@ -1,8 +1,10 @@
 package com.aispeaking.service;
 
+import com.aispeaking.dto.*;
 import com.aispeaking.entity.Exam;
 import com.aispeaking.entity.ExamQuestion;
 import com.aispeaking.entity.Question;
+import com.aispeaking.entity.enums.ExamStatus;
 import com.aispeaking.entity.enums.QuestionLevel;
 import com.aispeaking.repository.ExamQuestionRepository;
 import com.aispeaking.repository.ExamRepository;
@@ -13,7 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,38 +29,79 @@ public class ExamService {
     private final QuestionService questionService;
 
     @Transactional(readOnly = true)
-    public Page<Exam> getAllExams(Pageable pageable) {
-        return examRepository.findByDeletedAtIsNull(pageable);
+    public Page<ExamResponse> getAllExams(Pageable pageable) {
+        return examRepository.findByDeletedAtIsNull(pageable)
+                .map(ExamResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public Exam getExamById(Long id) {
+    public Page<ExamResponse> searchExams(
+            ExamStatus status,
+            Long createdBy,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Pageable pageable) {
+        return examRepository.findByCriteria(status, createdBy, fromDate, toDate, pageable)
+                .map(ExamResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public ExamResponse getExamById(Long id) {
+        Exam exam = examRepository.findById(id)
+                .filter(e -> e.getDeletedAt() == null)
+                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        return ExamResponse.from(exam);
+    }
+    
+    @Transactional(readOnly = true)
+    public Exam getExamEntityById(Long id) {
         return examRepository.findById(id)
                 .filter(e -> e.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
     }
 
     @Transactional
-    public Exam createExam(Exam exam) {
+    public ExamResponse createExam(CreateExamRequest request) {
+        Exam exam = new Exam();
+        exam.setName(request.getName());
+        exam.setDescription(request.getDescription());
+        exam.setDurationMinutes(request.getDurationMinutes());
+        exam.setTotalQuestions(request.getTotalQuestions());
+        exam.setStatus(request.getStatus() != null ? request.getStatus() : ExamStatus.DRAFT);
+        
+        Exam savedExam = examRepository.save(exam);
         log.info("Creating new exam: {}", exam.getName());
-        return examRepository.save(exam);
+        return ExamResponse.from(savedExam);
     }
 
     @Transactional
-    public Exam updateExam(Long id, Exam examDetails) {
-        Exam exam = getExamById(id);
-        exam.setName(examDetails.getName());
-        exam.setDescription(examDetails.getDescription());
-        exam.setDurationMinutes(examDetails.getDurationMinutes());
-        exam.setTotalQuestions(examDetails.getTotalQuestions());
-        exam.setStatus(examDetails.getStatus());
+    public ExamResponse updateExam(Long id, UpdateExamRequest request) {
+        Exam exam = getExamEntityById(id);
+        
+        if (request.getName() != null) {
+            exam.setName(request.getName());
+        }
+        if (request.getDescription() != null) {
+            exam.setDescription(request.getDescription());
+        }
+        if (request.getDurationMinutes() != null) {
+            exam.setDurationMinutes(request.getDurationMinutes());
+        }
+        if (request.getTotalQuestions() != null) {
+            exam.setTotalQuestions(request.getTotalQuestions());
+        }
+        if (request.getStatus() != null) {
+            exam.setStatus(request.getStatus());
+        }
+        
+        Exam savedExam = examRepository.save(exam);
         log.info("Updated exam with id: {}", id);
-        return examRepository.save(exam);
+        return ExamResponse.from(savedExam);
     }
 
     @Transactional
     public void deleteExam(Long id) {
-        Exam exam = getExamById(id);
+        Exam exam = getExamEntityById(id);
         exam.softDelete();
         examRepository.save(exam);
         log.info("Soft deleted exam with id: {}", id);
@@ -64,11 +109,11 @@ public class ExamService {
 
     @Transactional
     public void addQuestionsToExam(Long examId, List<Long> questionIds) {
-        Exam exam = getExamById(examId);
+        Exam exam = getExamEntityById(examId);
         
         int order = 1;
         for (Long questionId : questionIds) {
-            Question question = questionService.getQuestionById(questionId);
+            Question question = questionService.getQuestionEntityById(questionId);
             
             ExamQuestion examQuestion = new ExamQuestion();
             examQuestion.setExam(exam);
@@ -85,13 +130,16 @@ public class ExamService {
 
     @Transactional
     public void generateRandomExam(Long examId, QuestionLevel level, int count) {
-        Exam exam = getExamById(examId);
+        Exam exam = getExamEntityById(examId);
         
         // Clear existing questions
         examQuestionRepository.deleteByExamId(examId);
         
-        // Get random questions
-        List<Question> randomQuestions = questionService.getRandomQuestions(level, count);
+        // Get random questions - need entity not DTO
+        List<Question> randomQuestions = questionService.getRandomQuestions(level, count)
+                .stream()
+                .map(dto -> questionService.getQuestionEntityById(dto.getId()))
+                .collect(Collectors.toList());
         
         int order = 1;
         for (Question question : randomQuestions) {
@@ -109,7 +157,10 @@ public class ExamService {
     }
 
     @Transactional(readOnly = true)
-    public List<ExamQuestion> getExamQuestions(Long examId) {
-        return examQuestionRepository.findByExamIdOrderByQuestionOrder(examId);
+    public List<ExamQuestionResponse> getExamQuestions(Long examId) {
+        return examQuestionRepository.findByExamIdOrderByQuestionOrder(examId)
+                .stream()
+                .map(ExamQuestionResponse::from)
+                .collect(Collectors.toList());
     }
 }

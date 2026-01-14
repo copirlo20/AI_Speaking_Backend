@@ -1,6 +1,7 @@
 package com.aispeaking.entity;
 
 import com.aispeaking.entity.enums.ProcessingStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,10 +29,12 @@ public class TestAnswer extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "test_session_id", nullable = false)
+    @JsonIgnore
     private TestSession testSession;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
+    @JsonIgnore
     private Question question;
 
     @Column(name = "audio_url", length = 500)

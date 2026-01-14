@@ -1,6 +1,7 @@
 package com.aispeaking.entity;
 
 import com.aispeaking.entity.enums.TestSessionStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,6 +32,7 @@ public class TestSession extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_id", nullable = false)
+    @JsonIgnore
     private Exam exam;
 
     @Column(name = "student_name", nullable = false, length = 100)
@@ -56,5 +58,6 @@ public class TestSession extends BaseEntity {
     private LocalDateTime completedAt;
 
     @OneToMany(mappedBy = "testSession", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<TestAnswer> testAnswers = new ArrayList<>();
 }

@@ -1,5 +1,6 @@
 package com.aispeaking.controller;
 
+import com.aispeaking.dto.TestSessionResponse;
 import com.aispeaking.entity.TestSession;
 import com.aispeaking.entity.enums.ExamStatus;
 import com.aispeaking.entity.enums.TestSessionStatus;
@@ -68,7 +69,7 @@ public class AdminController {
         int updated = 0;
         for (Integer id : examIds) {
             try {
-                var exam = examService.getExamById(id.longValue());
+                var exam = examService.getExamEntityById(id.longValue());
                 exam.setStatus(status);
                 examRepository.save(exam);
                 updated++;
@@ -88,7 +89,7 @@ public class AdminController {
      * Query params: status, examId
      */
     @GetMapping("/test-sessions")
-    public ResponseEntity<Page<TestSession>> getAllTestSessions(
+    public ResponseEntity<Page<TestSessionResponse>> getAllTestSessions(
             @RequestParam(required = false) TestSessionStatus status,
             @RequestParam(required = false) Long examId,
             Pageable pageable) {
@@ -103,7 +104,7 @@ public class AdminController {
             sessions = testSessionRepository.findAll(pageable);
         }
         
-        return ResponseEntity.ok(sessions);
+        return ResponseEntity.ok(sessions.map(TestSessionResponse::from));
     }
 
     /**

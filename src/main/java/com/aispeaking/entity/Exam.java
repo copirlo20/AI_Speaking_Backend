@@ -1,6 +1,7 @@
 package com.aispeaking.entity;
 
 import com.aispeaking.entity.enums.ExamStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -43,8 +44,10 @@ public class Exam extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
+    @JsonIgnore
     private User createdBy;
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ExamQuestion> examQuestions = new ArrayList<>();
 }

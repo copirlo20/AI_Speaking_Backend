@@ -1,6 +1,7 @@
 package com.aispeaking.entity;
 
 import com.aispeaking.entity.enums.QuestionLevel;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,8 +39,10 @@ public class Question extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
+    @JsonIgnore  // Completely ignore this field in JSON serialization
     private User createdBy;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Completely ignore this collection to prevent lazy loading issues
     private List<SampleAnswer> sampleAnswers = new ArrayList<>();
 }

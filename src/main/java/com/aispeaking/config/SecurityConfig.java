@@ -53,45 +53,57 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers("/auth/**", "/users/register").permitAll()
+                // ============================================
+                // PUBLIC ENDPOINTS (No authentication required)
+                // ============================================
+                .requestMatchers("/auth/login", "/auth/register", "/auth/check-username/**").permitAll()
                 
-                // Question endpoints - TEACHER và ADMIN
+                // Test Session - Student actions (no login required)
+                .requestMatchers(HttpMethod.POST, "/test-sessions").permitAll() // Student starts test
+                .requestMatchers(HttpMethod.POST, "/test-sessions/*/answers").permitAll() // Student submits answer
+                .requestMatchers(HttpMethod.POST, "/test-sessions/*/complete").permitAll() // Student completes test
+                
+                // ============================================
+                // ADMIN ONLY - Full access
+                // ============================================
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                
+                // User Management - ADMIN only
+                .requestMatchers("/users/**").hasRole("ADMIN")
+                
+                // ============================================
+                // TEACHER + ADMIN - Question Bank Management
+                // ============================================
                 .requestMatchers(HttpMethod.GET, "/questions/**").hasAnyRole("TEACHER", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/questions/**").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/questions").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/questions/**").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/questions/**").hasAnyRole("TEACHER", "ADMIN")
                 
-                // Exam endpoints - TEACHER và ADMIN
+                // ============================================
+                // TEACHER + ADMIN - Exam Management
+                // ============================================
                 .requestMatchers(HttpMethod.GET, "/exams/**").hasAnyRole("TEACHER", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/exams/**").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/exams").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/exams/*/questions").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/exams/generate-random").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/exams/**").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/exams/**").hasAnyRole("TEACHER", "ADMIN")
                 
-                // Test Session endpoints - TEACHER (xem và chấm lại điểm)
+                // ============================================
+                // TEACHER + ADMIN - Test Session Viewing & Grading
+                // ============================================
                 .requestMatchers(HttpMethod.GET, "/test-sessions/**").hasAnyRole("TEACHER", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/test-sessions/*/submit-answer").permitAll() // Học sinh submit
-                .requestMatchers(HttpMethod.POST, "/test-sessions/*/complete").permitAll() // Học sinh complete
-                .requestMatchers(HttpMethod.POST, "/test-sessions").permitAll() // Học sinh tạo session
-                .requestMatchers(HttpMethod.PUT, "/test-sessions/**").hasAnyRole("TEACHER", "ADMIN") // Chấm lại
-                .requestMatchers(HttpMethod.DELETE, "/test-sessions/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/test-sessions/**").hasAnyRole("TEACHER", "ADMIN") // Re-grade if needed
                 
-                // Statistics endpoints - TEACHER và ADMIN (xem thống kê)
+                // ============================================
+                // TEACHER + ADMIN - Statistics & Reports
+                // ============================================
                 .requestMatchers("/statistics/**").hasAnyRole("TEACHER", "ADMIN")
-                
-                // Report endpoints - TEACHER và ADMIN
                 .requestMatchers("/reports/**").hasAnyRole("TEACHER", "ADMIN")
                 
-                // Admin endpoints - chỉ ADMIN
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                
-                // User management - chỉ ADMIN
-                .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
-                
-                // All other requests require authentication
+                // ============================================
+                // Default: All other requests require authentication
+                // ============================================
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

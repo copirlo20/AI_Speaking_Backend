@@ -1,16 +1,16 @@
 package com.aispeaking.controller;
 
-import com.aispeaking.dto.CreateUserRequest;
-import com.aispeaking.entity.User;
+import com.aispeaking.dto.*;
 import com.aispeaking.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -21,42 +21,18 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<Page<User>> getAllUsers(Pageable pageable) {
+    public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable) {
         return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<UserResponse> getUserByUsername(@PathVariable String username) {
         return ResponseEntity.ok(userService.getUserByUsername(username));
-    }
-
-    /**
-     * Create new user account with TEACHER role (default)
-     * POST /users/register
-     * 
-     * Request body:
-     * {
-     *   "username": "teacher01",
-     *   "password": "password123",
-     *   "fullName": "John Doe"
-     * }
-     * 
-     * @param request User registration details
-     * @return Created user with TEACHER role
-     */
-    @PostMapping("/register")
-    public ResponseEntity<User> registerTeacher(@RequestBody CreateUserRequest request) {
-        User user = userService.createTeacherAccount(
-            request.getUsername(),
-            request.getPassword(),
-            request.getFullName()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     /**
@@ -64,23 +40,22 @@ public class UserController {
      * POST /users
      */
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.createUser(user));
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+        return ResponseEntity.ok(userService.createUser(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(
+    public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUser(id, user));
+            @Valid @RequestBody UpdateUserRequest request) {
+        return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
     @PutMapping("/{id}/change-password")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
-            @RequestBody Map<String, String> request) {
-        String newPassword = request.get("newPassword");
-        userService.changePassword(id, newPassword);
+            @Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(id, request.getNewPassword());
         return ResponseEntity.ok().build();
     }
 

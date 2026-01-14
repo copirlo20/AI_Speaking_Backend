@@ -1,5 +1,6 @@
 package com.aispeaking.service;
 
+import com.aispeaking.dto.*;
 import com.aispeaking.entity.Question;
 import com.aispeaking.entity.enums.QuestionLevel;
 import com.aispeaking.repository.QuestionRepository;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,54 +23,80 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
 
     @Transactional(readOnly = true)
-    public Page<Question> getAllQuestions(Pageable pageable) {
-        return questionRepository.findByDeletedAtIsNull(pageable);
+    public Page<QuestionResponse> getAllQuestions(Pageable pageable) {
+        return questionRepository.findByDeletedAtIsNull(pageable)
+                .map(QuestionResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public Question getQuestionById(Long id) {
+    public QuestionResponse getQuestionById(Long id) {
+        Question question = questionRepository.findById(id)
+                .filter(q -> q.getDeletedAt() == null)
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+        return QuestionResponse.from(question);
+    }
+    
+    @Transactional(readOnly = true)
+    public Question getQuestionEntityById(Long id) {
         return questionRepository.findById(id)
                 .filter(q -> q.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
-    public Page<Question> searchQuestions(
+    public Page<QuestionResponse> searchQuestions(
             QuestionLevel level,
             String category,
+            Long createdBy,
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable) {
-        return questionRepository.findByCriteria(level, category, fromDate, toDate, pageable);
+        return questionRepository.findByCriteria(level, category, createdBy, fromDate, toDate, pageable)
+                .map(QuestionResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public List<Question> getRandomQuestions(QuestionLevel level, int count) {
-        return questionRepository.findRandomQuestions(
-                level,
-                Pageable.ofSize(count)
-        );
+    public List<QuestionResponse> getRandomQuestions(QuestionLevel level, int count) {
+        return questionRepository.findRandomQuestions(level, Pageable.ofSize(count))
+                .stream()
+                .map(QuestionResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Question createQuestion(Question question) {
+    public QuestionResponse createQuestion(CreateQuestionRequest request) {
+        Question question = new Question();
+        question.setContent(request.getContent());
+        question.setLevel(request.getLevel());
+        question.setCategory(request.getCategory());
+        
+        Question savedQuestion = questionRepository.save(question);
         log.info("Creating new question: {}", question.getContent());
-        return questionRepository.save(question);
+        return QuestionResponse.from(savedQuestion);
     }
 
     @Transactional
-    public Question updateQuestion(Long id, Question questionDetails) {
-        Question question = getQuestionById(id);
-        question.setContent(questionDetails.getContent());
-        question.setLevel(questionDetails.getLevel());
-        question.setCategory(questionDetails.getCategory());
+    public QuestionResponse updateQuestion(Long id, UpdateQuestionRequest request) {
+        Question question = getQuestionEntityById(id);
+        
+        if (request.getContent() != null) {
+            question.setContent(request.getContent());
+        }
+        if (request.getLevel() != null) {
+            question.setLevel(request.getLevel());
+        }
+        if (request.getCategory() != null) {
+            question.setCategory(request.getCategory());
+        }
+        
+        Question savedQuestion = questionRepository.save(question);
         log.info("Updated question with id: {}", id);
-        return questionRepository.save(question);
+        return QuestionResponse.from(savedQuestion);
     }
 
     @Transactional
     public void deleteQuestion(Long id) {
-        Question question = getQuestionById(id);
+        Question question = getQuestionEntityById(id);
         question.softDelete();
         questionRepository.save(question);
         log.info("Soft deleted question with id: {}", id);

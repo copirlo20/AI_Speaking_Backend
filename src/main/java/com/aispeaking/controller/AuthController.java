@@ -3,6 +3,7 @@ package com.aispeaking.controller;
 import com.aispeaking.dto.CreateUserRequest;
 import com.aispeaking.dto.LoginRequest;
 import com.aispeaking.dto.LoginResponse;
+import com.aispeaking.dto.UserResponse;
 import com.aispeaking.entity.User;
 import com.aispeaking.security.JwtTokenProvider;
 import com.aispeaking.service.UserService;
@@ -64,7 +65,7 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
 
-            User user = userService.getUserByUsername(request.getUsername());
+            User user = userService.getUserEntityByUsername(request.getUsername());
             
             LoginResponse response = new LoginResponse(
                 user.getId(),
@@ -101,7 +102,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody CreateUserRequest request) {
         try {
-            User user = userService.createTeacherAccount(
+            UserResponse user = userService.createTeacherAccount(
                 request.getUsername(),
                 request.getPassword(),
                 request.getFullName()

@@ -1,5 +1,6 @@
 package com.aispeaking.service;
 
+import com.aispeaking.dto.*;
 import com.aispeaking.entity.*;
 import com.aispeaking.entity.enums.ProcessingStatus;
 import com.aispeaking.entity.enums.TestSessionStatus;
@@ -7,6 +8,8 @@ import com.aispeaking.repository.TestAnswerRepository;
 import com.aispeaking.repository.TestSessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +23,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +35,30 @@ public class TestSessionService {
     private final ExamService examService;
     private final AIProcessingService aiProcessingService;
 
+    @Transactional(readOnly = true)
+    public Page<TestSessionResponse> getAllTestSessions(Pageable pageable) {
+        return testSessionRepository.findAll(pageable)
+                .map(TestSessionResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TestSessionResponse> searchTestSessions(
+            Long examId,
+            String studentName,
+            TestSessionStatus status,
+            BigDecimal minScore,
+            BigDecimal maxScore,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Pageable pageable) {
+        return testSessionRepository.findByCriteria(
+                examId, studentName, status, minScore, maxScore, fromDate, toDate, pageable)
+                .map(TestSessionResponse::from);
+    }
+
     @Transactional
-    public TestSession createTestSession(Long examId, String studentName, String studentOrganization, String studentEmail) {
-        Exam exam = examService.getExamById(examId);
+    public TestSessionResponse createTestSession(Long examId, String studentName, String studentOrganization, String studentEmail) {
+        Exam exam = examService.getExamEntityById(examId);
         
         TestSession testSession = new TestSession();
         testSession.setExam(exam);
@@ -46,21 +71,24 @@ public class TestSessionService {
         TestSession savedSession = testSessionRepository.save(testSession);
         
         // Create test answers for all exam questions
-        List<ExamQuestion> examQuestions = examService.getExamQuestions(examId);
-        for (ExamQuestion examQuestion : examQuestions) {
+        List<ExamQuestionResponse> examQuestions = examService.getExamQuestions(examId);
+        for (ExamQuestionResponse examQuestionResponse : examQuestions) {
             TestAnswer testAnswer = new TestAnswer();
             testAnswer.setTestSession(savedSession);
-            testAnswer.setQuestion(examQuestion.getQuestion());
+            // Need to get Question entity
+            Question question = new Question();
+            question.setId(examQuestionResponse.getQuestionId());
+            testAnswer.setQuestion(question);
             testAnswer.setProcessingStatus(ProcessingStatus.PENDING);
             testAnswerRepository.save(testAnswer);
         }
         
         log.info("Created test session {} for student {}", savedSession.getId(), studentName);
-        return savedSession;
+        return TestSessionResponse.from(savedSession);
     }
 
     @Transactional
-    public TestAnswer submitAnswer(Long testSessionId, Long questionId, MultipartFile audioFile) throws IOException {
+    public TestAnswerResponse submitAnswer(Long testSessionId, Long questionId, MultipartFile audioFile) throws IOException {
         // Find the test answer
         TestAnswer testAnswer = testAnswerRepository.findByTestSessionId(testSessionId).stream()
                 .filter(ta -> ta.getQuestion().getId().equals(questionId))
@@ -72,12 +100,12 @@ public class TestSessionService {
         testAnswer.setAudioUrl(audioUrl);
         testAnswer.setAnsweredAt(LocalDateTime.now());
         testAnswer.setProcessingStatus(ProcessingStatus.TRANSCRIBING);
-        testAnswerRepository.save(testAnswer);
+        TestAnswer savedAnswer = testAnswerRepository.save(testAnswer);
         
         // Process with AI (async)
-        aiProcessingService.processTestAnswer(testAnswer);
+        aiProcessingService.processTestAnswer(savedAnswer);
         
-        return testAnswer;
+        return TestAnswerResponse.from(savedAnswer);
     }
 
     @Transactional
@@ -131,14 +159,24 @@ public class TestSessionService {
     }
 
     @Transactional(readOnly = true)
-    public TestSession getTestSession(Long id) {
+    public TestSessionResponse getTestSession(Long id) {
+        TestSession testSession = testSessionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Test session not found"));
+        return TestSessionResponse.from(testSession);
+    }
+    
+    // Internal use only - for other services that need TestSession entity
+    @Transactional(readOnly = true)
+    public TestSession getTestSessionEntityById(Long id) {
         return testSessionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Test session not found"));
     }
 
     @Transactional(readOnly = true)
-    public List<TestAnswer> getTestAnswers(Long testSessionId) {
-        return testAnswerRepository.findByTestSessionId(testSessionId);
+    public List<TestAnswerResponse> getTestAnswers(Long testSessionId) {
+        return testAnswerRepository.findByTestSessionId(testSessionId).stream()
+                .map(TestAnswerResponse::from)
+                .collect(Collectors.toList());
     }
 
     private String saveAudioFile(MultipartFile file, Long testSessionId, Long questionId) throws IOException {
