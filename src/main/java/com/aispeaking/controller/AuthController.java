@@ -4,11 +4,16 @@ import com.aispeaking.dto.CreateUserRequest;
 import com.aispeaking.dto.LoginRequest;
 import com.aispeaking.dto.LoginResponse;
 import com.aispeaking.entity.User;
+import com.aispeaking.security.JwtTokenProvider;
 import com.aispeaking.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,9 +27,11 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
 
     /**
-     * Login endpoint
+     * Login endpoint với JWT
      * POST /api/auth/login
      * 
      * Request body:
@@ -35,6 +42,7 @@ public class AuthController {
      * 
      * Response:
      * {
+     *   "token": "eyJhbGc...",
      *   "id": 1,
      *   "username": "admin",
      *   "fullName": "Admin User",
@@ -46,7 +54,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            User user = userService.login(request.getUsername(), request.getPassword());
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()
+                    )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = tokenProvider.generateToken(authentication);
+
+            User user = userService.getUserByUsername(request.getUsername());
             
             LoginResponse response = new LoginResponse(
                 user.getId(),
@@ -55,14 +73,16 @@ public class AuthController {
                 user.getRole(),
                 user.getIsActive()
             );
+            response.setToken(jwt);
+            response.setMessage("Login successful");
             
             log.info("User {} logged in successfully", request.getUsername());
             return ResponseEntity.ok(response);
             
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             log.warn("Login failed for username: {}", request.getUsername());
             Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
+            error.put("message", "Invalid username or password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }

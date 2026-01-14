@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    // Note: You'll need to add PasswordEncoder bean in SecurityConfig
-    // For now, using plain text (should be encrypted in production)
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public Page<User> getAllUsers(Pageable pageable) {
@@ -43,8 +43,8 @@ public class UserService {
             throw new RuntimeException("Username already exists: " + user.getUsername());
         }
         
-        // In production, encrypt password
-        // user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Encrypt password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         
         log.info("Creating new user: {}", user.getUsername());
         return userRepository.save(user);
@@ -55,7 +55,7 @@ public class UserService {
      * This method ensures role is always TEACHER and cannot be overridden
      * 
      * @param username Username (must be unique)
-     * @param password Password (should be encrypted in production)
+     * @param password Password (will be encrypted)
      * @param fullName Full name of user
      * @return Created user entity
      */
@@ -67,7 +67,7 @@ public class UserService {
         
         User user = new User();
         user.setUsername(username);
-        user.setPassword(password); // TODO: Encrypt with BCrypt in production
+        user.setPassword(passwordEncoder.encode(password)); // Encrypt password
         user.setFullName(fullName);
         user.setRole(UserRole.TEACHER); // Always TEACHER by default
         user.setIsActive(true);
@@ -135,9 +135,8 @@ public class UserService {
     @Transactional
     public void changePassword(Long id, String newPassword) {
         User user = getUserById(id);
-        // In production, encrypt password
-        // user.setPassword(passwordEncoder.encode(newPassword));
-        user.setPassword(newPassword);
+        // Encrypt password
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         log.info("Changed password for user: {}", user.getUsername());
     }
