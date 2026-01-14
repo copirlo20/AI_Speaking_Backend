@@ -1,16 +1,17 @@
 # AI Speaking Test System
 
-Hệ thống kiểm tra speaking tự động sử dụng Local AI (Whisper + Qwen) chấm điểm và đưa ra nhận xét chi tiết.
+An automated speaking test system using Local AI (Whisper + Qwen) for scoring and providing detailed feedback.
 
-## 🎯 Tổng quan
+## 🎯 Overview
 
-Hệ thống bao gồm các thành phần:
+The system consists of the following components:
+
 - **Backend (Spring Boot 3.2)**: REST API server với JWT authentication, DTO pattern, pagination & filtering
 - **Whisper Server (Python)**: Speech-to-Text conversion (OpenAI Whisper)
 - **Qwen Server (Python)**: LLM-based scoring và feedback generation (Alibaba Qwen)
 - **Database (MySQL 8.0)**: Persistent storage với soft delete pattern
 
-## 🏗️ Kiến trúc hệ thống
+## 🏗️ System Architecture
 
 ```
 ┌──────────────────────────────┐
@@ -40,51 +41,54 @@ Hệ thống bao gồm các thành phần:
 └──────────┘  └──────────────┘
 ```
 
-## 🔄 Luồng xử lý
+## 🔄 Processing Flow
 
 1. **Authentication**: User login → JWT token generation → Token validation
 2. **Test Creation**: Admin creates questions → Generates exams (manual or random)
 3. **Test Taking**: Student starts session → Records audio answers → Uploads files
-4. **AI Processing**: 
+4. **AI Processing**:
    - Backend → Whisper Server → Transcribed text
    - Backend → Qwen Server (with text + question + sample answers) → Score + Feedback
 5. **Result**: Store in database → Display to student → Export reports
 
-## 📊 Cấu trúc Database
+## 📊 Database Structure
 
 ### Tables (8)
-- **users**: User management (Admin/Teacher roles) với password encryption
-- **questions**: Question bank với level (EASY/MEDIUM/HARD), category, indexes
-- **sample_answers**: Sample answers cho mỗi question với scoring rubric
-- **exams**: Exam definitions với duration, status (ACTIVE/INACTIVE/DRAFT)
-- **exam_questions**: Many-to-many relationship giữa exams và questions
-- **test_sessions**: Student test sessions với total score và completion tracking
-- **test_answers**: Individual answers với audio URL, transcription, score, feedback
+
+- **users**: User management (Admin/Teacher roles) with password encryption
+- **questions**: Question bank with level (EASY/MEDIUM/HARD), category, indexes
+- **sample_answers**: Sample answers for each question with scoring rubric
+- **exams**: Exam definitions with duration, status (ACTIVE/INACTIVE/DRAFT)
+- **exam_questions**: Many-to-many relationship between exams and questions
+- **test_sessions**: Student test sessions with total score and completion tracking
+- **test_answers**: Individual answers with audio URL, transcription, score, feedback
 - **ai_processing_logs**: AI processing audit logs (Whisper + Qwen)
 
 ### Key Features
+
 - ✅ Soft delete pattern (deletedAt field)
 - ✅ Audit fields (createdAt, updatedAt, createdBy)
 - ✅ Indexes for performance (level, category, status, dates)
-- ✅ Foreign key constraints với proper cascading
+- ✅ Foreign key constraints with proper cascading
 
-## 🚀 Cài đặt
+## 🚀 Installation
 
-### Yêu cầu hệ thống
-- **Java**: 17 hoặc mới hơn
-- **Maven**: 3.6+ (hoặc sử dụng Maven wrapper)
+### System Requirements
+
+- **Java**: 17 or newer
+- **Maven**: 3.6+ (or use Maven wrapper)
 - **MySQL**: 8.0+
-- **Python**: 3.9+ (cho AI servers)
-- **RAM**: Tối thiểu 8GB (16GB recommended cho AI models)
+- **Python**: 3.9+ (for AI servers)
+- **RAM**: Minimum 8GB (16GB recommended for AI models)
 - **Disk**: ~5GB (models + dependencies)
 
 ### 🗄️ Setup Database
 
 ```bash
-# Kết nối MySQL
+# Connect to MySQL
 mysql -u root -p
 
-# Tạo database
+# Create database
 CREATE DATABASE ai_speaking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 # Import schema
@@ -101,7 +105,7 @@ SHOW TABLES;
 # Clone repository
 cd backend
 
-# Cấu hình database
+# Configure database
 # Edit src/main/resources/application.properties:
 #   spring.datasource.username=root
 #   spring.datasource.password=your_password
@@ -113,13 +117,14 @@ mvn clean install
 # Run application
 mvn spring-boot:run
 
-# Hoặc chạy JAR file
+# Or run JAR file
 # java -jar target/ai-speaking-0.0.1-SNAPSHOT.jar
 ```
 
-✅ Backend sẽ chạy tại: `http://localhost:8080`
+✅ Backend will run at: `http://localhost:8080`
 
 **Default Admin Account:**
+
 - Username: `admin`
 - Password: `admin123`
 
@@ -146,7 +151,7 @@ python whisper_server.py
 
 ✅ Whisper Server: `http://localhost:5000`
 
-**Note**: First run sẽ download Whisper model (~150MB - 3GB tùy model size)
+**Note**: First run will download Whisper model (~150MB - 3GB depending on model size)
 
 ### 🧠 Setup Qwen Server
 
@@ -171,17 +176,19 @@ python qwen_server.py
 
 ✅ Qwen Server: `http://localhost:5001`
 
-**Note**: First run sẽ download Qwen model (~500MB - 1.5GB tùy model size)
+**Note**: First run will download Qwen model (~500MB - 1.5GB depending on model size)
 
 ### 🚀 Quick Start (All Services)
 
 **Windows:**
+
 ```bash
-# Chạy tất cả services cùng lúc
+# Run all services at once
 start-all.bat
 ```
 
 **Manual:**
+
 ```bash
 # Terminal 1: Backend
 cd backend && mvn spring-boot:run
@@ -196,11 +203,13 @@ cd qwen_server && python qwen_server.py
 ## 📡 API Documentation
 
 ### 🔐 Authentication
+
 - `POST /auth/login` - User login (returns JWT token)
 - `POST /auth/register` - Register new teacher account
 - `GET /auth/check-username/{username}` - Check username availability
 
 ### 👥 User Management
+
 - `GET /users` - Get all users (paginated)
 - `GET /users/{id}` - Get user by ID
 - `GET /users/username/{username}` - Get user by username
@@ -211,6 +220,7 @@ cd qwen_server && python qwen_server.py
 - `DELETE /users/{id}` - Soft delete user
 
 ### ❓ Questions Management
+
 - `GET /questions` - Get all questions (paginated, supports filtering)
 - `GET /questions/search` - Advanced search (level, category, createdBy, dates)
 - `GET /questions/{id}` - Get question by ID
@@ -219,12 +229,14 @@ cd qwen_server && python qwen_server.py
 - `DELETE /questions/{id}` - Soft delete question
 
 **Filter Parameters:**
+
 - `level`: EASY, MEDIUM, HARD
 - `category`: String
 - `createdBy`: User ID
 - `createdAfter`, `createdBefore`: Date range
 
 ### 📝 Exams Management
+
 - `GET /exams` - Get all exams (paginated, supports filtering)
 - `GET /exams/search` - Advanced search (status, name, dates)
 - `GET /exams/{id}` - Get exam by ID
@@ -236,11 +248,13 @@ cd qwen_server && python qwen_server.py
 - `DELETE /exams/{id}` - Soft delete exam
 
 **Filter Parameters:**
+
 - `status`: ACTIVE, INACTIVE, DRAFT
 - `name`: String search
 - `createdAfter`, `createdBefore`: Date range
 
 ### 🎓 Test Sessions
+
 - `GET /test-sessions` - Get all test sessions (paginated)
 - `GET /test-sessions/search` - Advanced search (examId, student name, status, scores)
 - `GET /test-sessions/{id}` - Get session details
@@ -250,6 +264,7 @@ cd qwen_server && python qwen_server.py
 - `POST /test-sessions/{id}/complete` - Complete test session
 
 **Search Parameters:**
+
 - `examId`: Long
 - `studentName`: String
 - `status`: IN_PROGRESS, COMPLETED, CANCELLED
@@ -257,6 +272,7 @@ cd qwen_server && python qwen_server.py
 - `startedAfter`, `startedBefore`: Date range
 
 ### 📊 Statistics & Analytics
+
 - `GET /statistics/dashboard` - Dashboard overview
 - `GET /statistics/questions/by-level` - Question count by level
 - `GET /statistics/exams/by-status` - Exam count by status
@@ -267,14 +283,19 @@ cd qwen_server && python qwen_server.py
 - `GET /statistics/by-date-range?startDate=...&endDate=...` - Stats by date range
 
 ### 🔧 Admin Operations
+
 - `DELETE /admin/questions/bulk-delete` - Delete multiple questions
+
   ```json
   {"questionIds": [1, 2, 3]}
   ```
+
 - `PUT /admin/exams/bulk-update-status` - Update status for multiple exams
+
   ```json
   {"examIds": [1, 2], "status": "ACTIVE"}
   ```
+
 - `GET /admin/test-sessions` - View all test sessions with filters
 - `PUT /admin/test-sessions/{id}/cancel` - Cancel a test session
 - `DELETE /admin/test-sessions/{id}` - Delete test session
@@ -282,11 +303,12 @@ cd qwen_server && python qwen_server.py
 - `GET /admin/config` - System configuration
 
 ### 📄 Reports & Export
+
 - `GET /reports/test-session/{id}/export-csv` - Export session as CSV
 - `GET /reports/test-session/{id}/detailed` - Detailed JSON report
 - `GET /reports/exam/{examId}/export-csv` - Export all sessions for exam as CSV
 
-## 💡 Ví dụ sử dụng
+## 💡 Usage Examples
 
 ### 1. Authentication Flow
 
@@ -381,7 +403,7 @@ Content-Type: application/json
 
 {
   "examId": 1,
-  "studentName": "Nguyen Van A",
+  "studentName": "John Doe",
   "studentOrganization": "ABC Company"
 }
 
@@ -423,35 +445,38 @@ Authorization: Bearer <token>
 ## ✨ Features
 
 ### Admin/Teacher Features
+
 - ✅ **User Management**: Create, update, deactivate users (Admin only)
-- ✅ **Question Bank**: CRUD operations với level, category classification
-- ✅ **Sample Answers**: Multiple sample answers per question với scoring rubric
-- ✅ **Exam Creation**: Manual selection hoặc random generation
-- ✅ **Advanced Filtering**: Multi-criteria search cho Questions, Exams, Test Sessions
+- ✅ **Question Bank**: CRUD operations with level, category classification
+- ✅ **Sample Answers**: Multiple sample answers per question with scoring rubric
+- ✅ **Exam Creation**: Manual selection or random generation
+- ✅ **Advanced Filtering**: Multi-criteria search for Questions, Exams, Test Sessions
 - ✅ **Bulk Operations**: Delete multiple questions, update multiple exam statuses
-- ✅ **Statistics Dashboard**: Real-time analytics và performance metrics
-- ✅ **CSV Export**: Export test results và exam reports
+- ✅ **Statistics Dashboard**: Real-time analytics and performance metrics
+- ✅ **CSV Export**: Export test results and exam reports
 - ✅ **Audit Logs**: Track AI processing (Whisper + Qwen)
 
 ### Student Features
-- ✅ **No Registration Required**: Enter name và organization to start
+
+- ✅ **No Registration Required**: Enter name and organization to start
 - ✅ **Audio Recording**: Record answers directly in browser
-- ✅ **Real-time Feedback**: Instant scoring sau khi submit
-- ✅ **Detailed Feedback**: AI-generated explanations và suggestions
+- ✅ **Real-time Feedback**: Instant scoring after submit
+- ✅ **Detailed Feedback**: AI-generated explanations and suggestions
 - ✅ **Progress Tracking**: See answered/pending questions
-- ✅ **Final Report**: Overall score với detailed breakdown
+- ✅ **Final Report**: Overall score with detailed breakdown
 
 ### Technical Features
+
 - ✅ **JWT Authentication**: Secure token-based authentication
-- ✅ **DTO Pattern**: Clean separation giữa entities và API contracts
-- ✅ **Soft Delete**: Preserve data integrity với deletedAt pattern
-- ✅ **Pagination**: Efficient data loading với Spring Data Pageable
-- ✅ **Validation**: Jakarta Bean Validation cho request data
+- ✅ **DTO Pattern**: Clean separation between entities and API contracts
+- ✅ **Soft Delete**: Preserve data integrity with deletedAt pattern
+- ✅ **Pagination**: Efficient data loading with Spring Data Pageable
+- ✅ **Validation**: Jakarta Bean Validation for request data
 - ✅ **Error Handling**: Consistent error responses
-- ✅ **CORS Support**: Configurable CORS cho frontend integration
+- ✅ **CORS Support**: Configurable CORS for frontend integration
 - ✅ **File Upload**: Secure audio file handling
 - ✅ **Async Processing**: Non-blocking AI operations
-- ✅ **Transaction Management**: ACID compliance với @Transactional
+- ✅ **Transaction Management**: ACID compliance with @Transactional
 
 ## ⚙️ Configuration
 
@@ -493,6 +518,7 @@ cors.allowed.origins=http://localhost:3000,http://localhost:5173
 ### Whisper Model Options
 
 Edit `whisper_server.py`:
+
 ```python
 # Model sizes: tiny, base, small, medium, large
 # Larger = more accurate but slower
@@ -503,6 +529,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 ```
 
 **Model Comparison:**
+
 | Model | Size | Speed | Accuracy |
 |-------|------|-------|----------|
 | tiny  | ~40MB | Very Fast | Good |
@@ -514,6 +541,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 ### Qwen Model Options
 
 Edit `qwen_server.py`:
+
 ```python
 # Model options:
 # - Qwen/Qwen2.5-0.5B-Instruct (fastest, ~500MB)
@@ -530,6 +558,7 @@ temperature = 0.7     # 0.1-1.0, higher = more creative
 ### AI Scoring Prompt Customization
 
 Edit `AIProcessingService.java`:
+
 ```java
 private String buildScoringPrompt(Question question, List<SampleAnswer> sampleAnswers) {
     // Customize scoring criteria:
@@ -546,6 +575,7 @@ private String buildScoringPrompt(Question question, List<SampleAnswer> sampleAn
 ### Backend Issues
 
 **Database Connection Failed**
+
 ```bash
 # Check MySQL is running
 mysql -u root -p
@@ -559,6 +589,7 @@ spring.datasource.password=your_password
 ```
 
 **Port 8080 Already in Use**
+
 ```bash
 # Windows: Find and kill process
 netstat -ano | findstr :8080
@@ -572,6 +603,7 @@ server.port=8081
 ```
 
 **JWT Token Expired**
+
 ```bash
 # Login again to get new token
 POST /auth/login
@@ -583,6 +615,7 @@ jwt.expiration=86400000  # 24 hours in milliseconds
 ### Whisper Server Issues
 
 **FFmpeg Not Found**
+
 ```bash
 # Windows: Download from https://ffmpeg.org/
 # Add to PATH or install via pip
@@ -596,6 +629,7 @@ brew install ffmpeg
 ```
 
 **CUDA Out of Memory**
+
 ```python
 # Use CPU instead (whisper_server.py)
 device = "cpu"
@@ -605,6 +639,7 @@ model = whisper.load_model("tiny")
 ```
 
 **Slow Transcription**
+
 - Use smaller model (tiny/base instead of medium/large)
 - Enable GPU acceleration if available
 - Reduce audio quality before upload
@@ -612,6 +647,7 @@ model = whisper.load_model("tiny")
 ### Qwen Server Issues
 
 **Model Download Failed**
+
 ```bash
 # Manual download from Hugging Face
 # Set HF_HOME environment variable
@@ -622,6 +658,7 @@ export HF_ENDPOINT=https://hf-mirror.com
 ```
 
 **Out of Memory**
+
 ```python
 # Use smaller model (qwen_server.py)
 model_name = "Qwen/Qwen2.5-0.5B-Instruct"
@@ -634,6 +671,7 @@ device = "cpu"
 ```
 
 **Slow Scoring**
+
 - Use 0.5B model instead of 1.5B/3B
 - Reduce `max_new_tokens` to 128-256
 - Use GPU if available (requires CUDA setup)
@@ -641,6 +679,7 @@ device = "cpu"
 ### File Upload Issues
 
 **File Too Large**
+
 ```properties
 # Increase limits (application.properties)
 spring.servlet.multipart.max-file-size=100MB
@@ -648,6 +687,7 @@ spring.servlet.multipart.max-request-size=100MB
 ```
 
 **Upload Directory Not Found**
+
 ```bash
 # Create directories
 mkdir -p uploads/audio
@@ -657,6 +697,7 @@ file.upload.dir=/absolute/path/to/uploads
 ```
 
 **Permission Denied**
+
 ```bash
 # Grant write permissions
 # Windows
@@ -669,14 +710,17 @@ chmod -R 755 uploads
 ### Common Errors
 
 **"User not found"**
+
 - Use default admin account (admin/admin123)
 - Register new account via `/auth/register`
 
 **"Exam not found"**
+
 - Create exam first before generating questions
 - Check exam ID in response after creation
 
 **"Invalid JWT token"**
+
 - Token might be expired, login again
 - Check Authorization header format: `Bearer <token>`
 - Verify jwt.secret matches in application.properties
@@ -766,7 +810,7 @@ backend/
 ## 👥 Authors & Credits
 
 - **Backend Framework**: Spring Boot 3.2 + Spring Security + Spring Data JPA
-- **AI Models**: 
+- **AI Models**:
   - OpenAI Whisper (Speech-to-Text)
   - Alibaba Qwen 2.5 (Language Model for Scoring)
 - **Database**: MySQL 8.0
