@@ -170,8 +170,4 @@ public class AdminController {
         
         return ResponseEntity.ok(config);
     }
-
-    private java.util.HashMap<String, Object> HashMap() {
-        return new java.util.HashMap<>();
-    }
 }

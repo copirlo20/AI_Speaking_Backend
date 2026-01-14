@@ -27,8 +27,6 @@ public class ReportController {
      */
     @GetMapping("/test-session/{id}/export-csv")
     public ResponseEntity<String> exportTestSessionCsv(@PathVariable Long id) {
-        TestSession session = testSessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Test session not found"));
         
         List<TestAnswer> answers = testAnswerRepository.findByTestSessionId(id);
         

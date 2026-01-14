@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,9 +61,6 @@ public class TestSessionService {
 
     @Transactional
     public TestAnswer submitAnswer(Long testSessionId, Long questionId, MultipartFile audioFile) throws IOException {
-        TestSession testSession = testSessionRepository.findById(testSessionId)
-                .orElseThrow(() -> new RuntimeException("Test session not found"));
-        
         // Find the test answer
         TestAnswer testAnswer = testAnswerRepository.findByTestSessionId(testSessionId).stream()
                 .filter(ta -> ta.getQuestion().getId().equals(questionId))
@@ -123,7 +121,7 @@ public class TestSessionService {
         BigDecimal averageScore = totalScore.divide(
                 BigDecimal.valueOf(testAnswers.size()),
                 2,
-                BigDecimal.ROUND_HALF_UP
+                RoundingMode.HALF_UP
         );
         
         log.debug("Test session {}: {} answers, total score = {}, average = {}", 
