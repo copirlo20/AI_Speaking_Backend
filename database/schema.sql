@@ -135,5 +135,5 @@ CREATE TABLE ai_processing_logs (
 );
 
 -- Insert default admin user (password: admin123, should be changed)
-INSERT INTO users (username, password, full_name, role) VALUES 
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'System Admin', 'ADMIN');
+-- INSERT INTO users (username, password, full_name, role) VALUES 
+-- ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'System Admin', 'ADMIN');
