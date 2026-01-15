@@ -34,9 +34,6 @@ public class Question extends BaseEntity {
     @Column(length = 20)
     private QuestionLevel level = QuestionLevel.EASY;
 
-    @Column(length = 50)
-    private String category;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     @JsonIgnore  // Completely ignore this field in JSON serialization

@@ -41,9 +41,6 @@ public class TestSession extends BaseEntity {
     @Column(name = "student_organization", length = 200)
     private String studentOrganization;
 
-    @Column(name = "student_email", length = 100)
-    private String studentEmail;
-
     @Column(name = "total_score", precision = 5, scale = 2)
     private BigDecimal totalScore = BigDecimal.ZERO;
 

@@ -22,13 +22,12 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     @Query("SELECT q FROM Question q WHERE q.deletedAt IS NULL " +
            "AND (:level IS NULL OR q.level = :level) " +
            "AND (:category IS NULL OR q.category = :category) " +
-           "AND (:createdBy IS NULL OR q.createdBy.id = :createdBy) " +
+           "AND (:createdByUsername IS NULL OR q.createdBy.username = :createdByUsername) " +
            "AND (:fromDate IS NULL OR q.createdAt >= :fromDate) " +
            "AND (:toDate IS NULL OR q.createdAt <= :toDate)")
     Page<Question> findByCriteria(
         @Param("level") QuestionLevel level,
-        @Param("category") String category,
-        @Param("createdBy") Long createdBy,
+        @Param("createdByUsername") String createdByUsername,
         @Param("fromDate") LocalDateTime fromDate,
         @Param("toDate") LocalDateTime toDate,
         Pageable pageable

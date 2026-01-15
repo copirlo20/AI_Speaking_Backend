@@ -33,7 +33,7 @@ public class AuthController {
 
     /**
      * Login endpoint với JWT
-     * POST /api/auth/login
+     * POST /auth/login
      * 
      * Request body:
      * {
@@ -90,7 +90,7 @@ public class AuthController {
 
     /**
      * Register new TEACHER account
-     * POST /api/auth/register
+     * POST /auth/register
      * 
      * Request body:
      * {
@@ -128,7 +128,7 @@ public class AuthController {
 
     /**
      * Check if username exists
-     * GET /api/auth/check-username/{username}
+     * GET /auth/check-username/{username}
      */
     @GetMapping("/check-username/{username}")
     public ResponseEntity<Map<String, Boolean>> checkUsername(@PathVariable String username) {

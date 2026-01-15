@@ -46,12 +46,11 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public Page<QuestionResponse> searchQuestions(
             QuestionLevel level,
-            String category,
-            Long createdBy,
+            String createdByUsername,
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable) {
-        return questionRepository.findByCriteria(level, category, createdBy, fromDate, toDate, pageable)
+        return questionRepository.findByCriteria(level, createdByUsername, fromDate, toDate, pageable)
                 .map(QuestionResponse::from);
     }
 
@@ -68,7 +67,6 @@ public class QuestionService {
         Question question = new Question();
         question.setContent(request.getContent());
         question.setLevel(request.getLevel());
-        question.setCategory(request.getCategory());
         
         Question savedQuestion = questionRepository.save(question);
         log.info("Creating new question: {}", question.getContent());
@@ -84,9 +82,6 @@ public class QuestionService {
         }
         if (request.getLevel() != null) {
             question.setLevel(request.getLevel());
-        }
-        if (request.getCategory() != null) {
-            question.setCategory(request.getCategory());
         }
         
         Question savedQuestion = questionRepository.save(question);

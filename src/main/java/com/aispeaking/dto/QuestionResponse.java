@@ -22,8 +22,6 @@ public class QuestionResponse {
     private Long id;
     private String content;
     private QuestionLevel level;
-    private String category;
-    private Long createdBy;
     private String createdByUsername;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -36,8 +34,6 @@ public class QuestionResponse {
                 .id(question.getId())
                 .content(question.getContent())
                 .level(question.getLevel())
-                .category(question.getCategory())
-                .createdBy(question.getCreatedBy() != null ? question.getCreatedBy().getId() : null)
                 .createdByUsername(question.getCreatedBy() != null ? question.getCreatedBy().getUsername() : null)
                 .createdAt(question.getCreatedAt())
                 .updatedAt(question.getUpdatedAt())

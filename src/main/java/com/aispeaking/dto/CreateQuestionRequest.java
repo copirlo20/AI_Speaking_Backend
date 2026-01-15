@@ -15,5 +15,4 @@ public class CreateQuestionRequest {
     
     private QuestionLevel level;
     
-    private String category;
 }

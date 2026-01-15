@@ -20,12 +20,12 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     
     @Query("SELECT e FROM Exam e WHERE e.deletedAt IS NULL " +
            "AND (:status IS NULL OR e.status = :status) " +
-           "AND (:createdBy IS NULL OR e.createdBy.id = :createdBy) " +
+           "AND (:createdByUsername IS NULL OR e.createdBy.username = :createdByUsername) " +
            "AND (:fromDate IS NULL OR e.createdAt >= :fromDate) " +
            "AND (:toDate IS NULL OR e.createdAt <= :toDate)")
     Page<Exam> findByCriteria(
         @Param("status") ExamStatus status,
-        @Param("createdBy") Long createdBy,
+        @Param("createdByUsername") String createdByUsername,
         @Param("fromDate") LocalDateTime fromDate,
         @Param("toDate") LocalDateTime toDate,
         Pageable pageable

@@ -37,11 +37,11 @@ public class ExamService {
     @Transactional(readOnly = true)
     public Page<ExamResponse> searchExams(
             ExamStatus status,
-            Long createdBy,
+            String createdByUsername,
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable) {
-        return examRepository.findByCriteria(status, createdBy, fromDate, toDate, pageable)
+        return examRepository.findByCriteria(status, createdByUsername, fromDate, toDate, pageable)
                 .map(ExamResponse::from);
     }
 

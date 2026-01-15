@@ -25,7 +25,6 @@ public class ExamResponse {
     private Integer durationMinutes;
     private Integer totalQuestions;
     private ExamStatus status;
-    private Long createdBy;
     private String createdByUsername;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -41,7 +40,6 @@ public class ExamResponse {
                 .durationMinutes(exam.getDurationMinutes())
                 .totalQuestions(exam.getTotalQuestions())
                 .status(exam.getStatus())
-                .createdBy(exam.getCreatedBy() != null ? exam.getCreatedBy().getId() : null)
                 .createdByUsername(exam.getCreatedBy() != null ? exam.getCreatedBy().getUsername() : null)
                 .createdAt(exam.getCreatedAt())
                 .updatedAt(exam.getUpdatedAt())

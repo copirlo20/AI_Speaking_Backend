@@ -9,7 +9,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -24,6 +23,15 @@ public class ReportController {
 
     /**
      * Export test session report as CSV
+     * GET /reports/test-session/{id}/export-csv
+     * 
+     * Response: CSV file download
+     * Content-Type: text/csv
+     * Content-Disposition: attachment; filename="test-session-{id}.csv"
+     * 
+     * CSV Format:
+     * Question,Transcribed Text,Score,Feedback,Status
+     * "Describe your hometown","My hometown is Ha Noi...",8.5,"Good pronunciation",COMPLETED
      */
     @GetMapping("/test-session/{id}/export-csv")
     public ResponseEntity<String> exportTestSessionCsv(@PathVariable Long id) {
@@ -52,6 +60,34 @@ public class ReportController {
 
     /**
      * Generate detailed report for test session
+     * GET /reports/test-session/{id}/detailed
+     * 
+     * Response JSON:
+     * {
+     *   "sessionId": 1,
+     *   "studentName": "Nguyen Van A",
+     *   "studentOrganization": "University ABC",
+     *   "examName": "English Speaking Test",
+     *   "totalScore": 85.5,
+     *   "status": "COMPLETED",
+     *   "startedAt": "2026-01-15T10:00:00",
+     *   "completedAt": "2026-01-15T11:30:00",
+     *   "answers": [
+     *     {
+     *       "questionId": 5,
+     *       "questionContent": "Describe your hometown",
+     *       "questionLevel": "EASY",
+     *       "transcribedText": "My hometown is Ha Noi...",
+     *       "score": 8.5,
+     *       "feedback": "Good pronunciation and grammar",
+     *       "status": "COMPLETED",
+     *       "answeredAt": "2026-01-15T10:15:00"
+     *     }
+     *   ],
+     *   "completedAnswers": 10,
+     *   "totalQuestions": 10,
+     *   "completionRate": 100.0
+     * }
      */
     @GetMapping("/test-session/{id}/detailed")
     public ResponseEntity<java.util.Map<String, Object>> getDetailedTestSessionReport(@PathVariable Long id) {
@@ -103,6 +139,15 @@ public class ReportController {
 
     /**
      * Export all test sessions for an exam as CSV
+     * GET /reports/exam/{examId}/export-csv
+     * 
+     * Response: CSV file download
+     * Content-Type: text/csv
+     * Content-Disposition: attachment; filename="exam-{examId}-sessions.csv"
+     * 
+     * CSV Format:
+     * Session ID,Student Name,Organization,Total Score,Status,Started At,Completed At
+     * 1,"Nguyen Van A","University ABC",85.5,COMPLETED,2026-01-15 10:00:00,2026-01-15 11:30:00
      */
     @GetMapping("/exam/{examId}/export-csv")
     public ResponseEntity<String> exportExamSessionsCsv(@PathVariable Long examId) {

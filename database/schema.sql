@@ -11,7 +11,6 @@ CREATE TABLE users (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
     INDEX idx_username (username),
     INDEX idx_role (role)
 );
@@ -21,11 +20,9 @@ CREATE TABLE questions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     content TEXT NOT NULL,
     level ENUM('EASY', 'HARD') DEFAULT 'EASY',
-    category VARCHAR(50),
     created_by BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
     FOREIGN KEY (created_by) REFERENCES users(id),
     INDEX idx_level (level),
     INDEX idx_created_by (created_by),
@@ -41,7 +38,6 @@ CREATE TABLE sample_answers (
     explanation TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
     INDEX idx_question_id (question_id)
 );
@@ -57,7 +53,6 @@ CREATE TABLE exams (
     created_by BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
     FOREIGN KEY (created_by) REFERENCES users(id),
     INDEX idx_status (status),
     INDEX idx_created_by (created_by),

@@ -1,6 +1,5 @@
 package com.aispeaking.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -18,7 +17,4 @@ public class CreateTestSessionRequest {
     private String studentName;
     
     private String studentOrganization;
-    
-    @Email(message = "Invalid email format")
-    private String studentEmail;
 }

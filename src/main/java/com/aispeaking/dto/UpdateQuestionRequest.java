@@ -11,5 +11,4 @@ public class UpdateQuestionRequest {
     
     private String content;
     private QuestionLevel level;
-    private String category;
 }

@@ -118,15 +118,23 @@ public class AIProcessingService {
         List<SampleAnswer> sampleAnswers = sampleAnswerRepository
                 .findByQuestionIdAndDeletedAtIsNull(testAnswer.getQuestion().getId());
         
-        // Build prompt
-        String systemPrompt = buildScoringPrompt(testAnswer.getQuestion(), sampleAnswers);
-        
         WebClient webClient = webClientBuilder.baseUrl(qwenUrl).build();
         
+        // Build request matching qwen_server's expected format
         Map<String, Object> request = new HashMap<>();
-        request.put("system_prompt", systemPrompt);
-        request.put("user_text", testAnswer.getTranscribedText());
         request.put("question", testAnswer.getQuestion().getContent());
+        request.put("user_text", testAnswer.getTranscribedText());
+        
+        // Add sample answers in the expected format
+        List<Map<String, Object>> sampleList = sampleAnswers.stream()
+                .map(sample -> {
+                    Map<String, Object> sampleMap = new HashMap<>();
+                    sampleMap.put("text", sample.getContent());
+                    sampleMap.put("score", sample.getScore());
+                    return sampleMap;
+                })
+                .toList();
+        request.put("sample_answers", sampleList);
         
         String requestJson = objectMapper.writeValueAsString(request);
         
@@ -150,34 +158,6 @@ public class AIProcessingService {
         result.put("feedback", jsonNode.get("feedback").asText());
         
         return result;
-    }
-
-    private String buildScoringPrompt(Question question, List<SampleAnswer> sampleAnswers) {
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("Bạn là một giám khảo chuyên nghiệp đánh giá bài thi nói tiếng Anh.\n\n");
-        prompt.append("Câu hỏi: ").append(question.getContent()).append("\n\n");
-        
-        if (!sampleAnswers.isEmpty()) {
-            prompt.append("Đáp án mẫu và điểm tương ứng:\n");
-            for (SampleAnswer sample : sampleAnswers) {
-                prompt.append("- Điểm ").append(sample.getScore()).append(": ");
-                prompt.append(sample.getContent()).append("\n");
-                if (sample.getExplanation() != null) {
-                    prompt.append("  Giải thích: ").append(sample.getExplanation()).append("\n");
-                }
-            }
-            prompt.append("\n");
-        }
-        
-        prompt.append("Nhiệm vụ: Chấm điểm câu trả lời của thí sinh từ 0-10 dựa trên:\n");
-        prompt.append("1. Độ chính xác nội dung\n");
-        prompt.append("2. Ngữ pháp\n");
-        prompt.append("3. Từ vựng\n");
-        prompt.append("4. Độ mạch lạc\n");
-        prompt.append("5. So sánh với đáp án mẫu\n\n");
-        prompt.append("Trả về JSON với format: {\"score\": <điểm>, \"feedback\": \"<nhận xét chi tiết>\"}\n");
-        
-        return prompt.toString();
     }
 
     private void logAIRequest(TestAnswer testAnswer, AIServiceType serviceType, 

@@ -1,24 +1,24 @@
-# AI Speaking Test System
+# Hệ Thống Thi Speaking Tự Động với AI
 
-An automated speaking test system using Local AI (Whisper + Qwen) for scoring and providing detailed feedback.
+Một hệ thống thi speaking tự động sử dụng AI cục bộ (Whisper + Qwen) để chấm điểm và cung cấp phản hồi chi tiết.
 
-## 🎯 Overview
+## 🎯 Tổng Quan
 
-The system consists of the following components:
+Hệ thống bao gồm các thành phần sau:
 
-- **Backend (Spring Boot 3.2)**: REST API server với JWT authentication, DTO pattern, pagination & filtering
-- **Whisper Server (Python)**: Speech-to-Text conversion (OpenAI Whisper)
-- **Qwen Server (Python)**: LLM-based scoring và feedback generation (Alibaba Qwen)
-- **Database (MySQL 8.0)**: Persistent storage với soft delete pattern
+- **Backend (Spring Boot)**: REST API server với JWT authentication, DTO pattern, pagination & filtering
+- **Whisper Server (Python)**: Chuyển đổi giọng nói thành văn bản (OpenAI Whisper)
+- **Qwen Server (Python)**: Chấm điểm và tạo phản hồi dựa trên LLM (Alibaba Qwen)
+- **Database (MySQL)**: Lưu trữ dữ liệu với soft delete pattern
 
-## 🏗️ System Architecture
+## 🏗️ Kiến Trúc Hệ Thống
 
 ```
 ┌──────────────────────────────┐
 │   Frontend (React/Vue)       │
-│   - Login/Register UI        │
-│   - Test Taking Interface    │
-│   - Admin Dashboard          │
+│   - Giao diện đăng nhập      │
+│   - Giao diện làm bài thi    │
+│   - Dashboard quản trị       │
 └──────────┬───────────────────┘
            │ HTTP/REST + JWT
            ▼
@@ -32,173 +32,433 @@ The system consists of the following components:
 └──────┬──────────┬──────────────┘
        │          │
        │          ├─────────────► MySQL Database (3306)
-       │          │                └─ 8 Tables with indexes
+       │          │                └─ 9 bảng với indexes
        ▼          ▼
 ┌──────────┐  ┌──────────────┐
 │ Whisper  │  │    Qwen      │
 │  (5000)  │  │   (5001)     │
-│  STT AI  │  │  Scoring AI  │
+│  STT AI  │  │  Chấm điểm   │
 └──────────┘  └──────────────┘
 ```
 
-## 🔄 Processing Flow
+## 🔄 Luồng Xử Lý
 
-1. **Authentication**: User login → JWT token generation → Token validation
-2. **Test Creation**: Admin creates questions → Generates exams (manual or random)
-3. **Test Taking**: Student starts session → Records audio answers → Uploads files
-4. **AI Processing**:
-   - Backend → Whisper Server → Transcribed text
-   - Backend → Qwen Server (with text + question + sample answers) → Score + Feedback
-5. **Result**: Store in database → Display to student → Export reports
+1. **Xác thực**: User đăng nhập → Tạo JWT token → Xác thực token
+2. **Tạo kỳ thi**: Admin tạo câu hỏi → Tạo đề thi (thủ công hoặc ngẫu nhiên)
+3. **Làm bài thi**: Học sinh bắt đầu → Ghi âm câu trả lời → Upload file
+4. **Xử lý AI**:
+   - Backend → Whisper Server → Văn bản được chuyển đổi
+   - Backend → Qwen Server (với text + câu hỏi + câu trả lời mẫu) → Điểm + Phản hồi
+5. **Kết quả**: Lưu vào database → Hiển thị cho học sinh → Xuất báo cáo
 
-## 📊 Database Structure
+## 📊 Cấu Trúc Database
 
-### Tables (8)
+### Bảng (9 bảng)
 
-- **users**: User management (Admin/Teacher roles) with password encryption
-- **questions**: Question bank with level (EASY/MEDIUM/HARD), category, indexes
-- **sample_answers**: Sample answers for each question with scoring rubric
-- **exams**: Exam definitions with duration, status (ACTIVE/INACTIVE/DRAFT)
-- **exam_questions**: Many-to-many relationship between exams and questions
-- **test_sessions**: Student test sessions with total score and completion tracking
-- **test_answers**: Individual answers with audio URL, transcription, score, feedback
-- **ai_processing_logs**: AI processing audit logs (Whisper + Qwen)
+- **users**: Quản lý người dùng (Admin/Teacher) với mã hóa mật khẩu
+- **questions**: Ngân hàng câu hỏi với level (EASY/HARD), indexes
+- **sample_answers**: Câu trả lời mẫu cho mỗi câu hỏi với thang điểm
+- **exams**: Định nghĩa kỳ thi với trạng thái (ACTIVE/INACTIVE/DRAFT)
+- **exam_questions**: Quan hệ nhiều-nhiều giữa exams và questions
+- **test_sessions**: Phiên thi của học sinh với tổng điểm và theo dõi hoàn thành
+- **test_answers**: Câu trả lời riêng lẻ với audio URL, transcription, điểm, phản hồi
+- **ai_processing_logs**: Logs kiểm tra xử lý AI (Whisper + Qwen)
+- **base_entity**: Các trường chung (createdAt, updatedAt, deletedAt, createdBy)
 
-### Key Features
+### Tính Năng Chính
 
-- ✅ Soft delete pattern (deletedAt field)
+- ✅ Soft delete pattern (trường deletedAt)
 - ✅ Audit fields (createdAt, updatedAt, createdBy)
-- ✅ Indexes for performance (level, category, status, dates)
-- ✅ Foreign key constraints with proper cascading
+- ✅ Indexes để tối ưu hiệu suất (level, status, dates)
+- ✅ Foreign key constraints với cascading phù hợp
 
-## 🚀 Installation
+## 🚀 Cài Đặt
 
-### System Requirements
+### Yêu Cầu Hệ Thống
 
-- **Java**: 17 or newer
-- **Maven**: 3.6+ (or use Maven wrapper)
+- **Java**: 21 (LTS)
+- **Maven**: 3.6+ (hoặc dùng Maven wrapper)
 - **MySQL**: 8.0+
-- **Python**: 3.9+ (for AI servers)
-- **RAM**: Minimum 8GB (16GB recommended for AI models)
+- **Python**: 3.9+ (cho AI servers)
+- **RAM**: Tối thiểu 8GB (khuyến nghị 16GB cho AI models)
 - **Disk**: ~5GB (models + dependencies)
 
-### 🗄️ Setup Database
+### 🗄️ Cài Đặt Database
 
 ```bash
-# Connect to MySQL
+# Kết nối MySQL
 mysql -u root -p
 
-# Create database
-CREATE DATABASE ai_speaking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+# Tạo database
+CREATE DATABASE ai_speaking CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 # Import schema
-USE ai_speaking_db;
+USE ai_speaking;
 SOURCE database/schema.sql;
 
-# Verify
+# Kiểm tra
 SHOW TABLES;
 ```
 
-### ⚙️ Setup Backend (Spring Boot)
+### ⚙️ Cài Đặt Backend (Spring Boot)
 
 ```bash
 # Clone repository
 cd backend
 
-# Configure database
-# Edit src/main/resources/application.properties:
+# Cấu hình database
+# Sửa file src/main/resources/application.properties:
 #   spring.datasource.username=root
 #   spring.datasource.password=your_password
-#   spring.datasource.url=jdbc:mysql://localhost:3306/ai_speaking_db
+#   spring.datasource.url=jdbc:mysql://localhost:3306/ai_speaking
 
 # Build project
 mvn clean install
 
-# Run application
+# Chạy ứng dụng
 mvn spring-boot:run
 
-# Or run JAR file
-# java -jar target/ai-speaking-0.0.1-SNAPSHOT.jar
+# Hoặc chạy file JAR
+# java -jar target/ai-speaking-backend-1.0.0.jar
 ```
 
-✅ Backend will run at: `http://localhost:8080`
+✅ Backend sẽ chạy tại: `http://localhost:8080`
 
-**Default Admin Account:**
-
-- Username: `admin`
-- Password: `admin123`
-
-### 🎤 Setup Whisper Server
+### 🎤 Cài Đặt Whisper Server
 
 ```bash
 cd whisper_server
 
-# Create virtual environment
-python -m venv venv
-
-# Activate
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Install dependencies
+# Cài đặt dependencies
 pip install -r requirements.txt
 
-# Run server
+# Chạy server
 python whisper_server.py
 ```
 
 ✅ Whisper Server: `http://localhost:5000`
 
-**Note**: First run will download Whisper model (~150MB - 3GB depending on model size)
+**Lưu ý**: Lần chạy đầu tiên sẽ tải Whisper model (~150MB - 3GB tùy kích thước model)
 
-### 🧠 Setup Qwen Server
+### 🧠 Cài Đặt Qwen Server
 
 ```bash
 cd qwen_server
 
-# Create virtual environment
-python -m venv venv
-
-# Activate
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Install dependencies
+# Cài đặt dependencies
 pip install -r requirements.txt
 
-# Run server
+# Chạy server
 python qwen_server.py
 ```
 
 ✅ Qwen Server: `http://localhost:5001`
 
-**Note**: First run will download Qwen model (~500MB - 1.5GB depending on model size)
+**Lưu ý**: Lần chạy đầu tiên sẽ tải Qwen model (~500MB - 1.5GB tùy kích thước model)
 
-### 🚀 Quick Start (All Services)
+## 📡 Tài Liệu API
 
-**Windows:**
+Chi tiết đầy đủ xem file: [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+
+### Tóm Tắt Các Nhóm API
+
+1. **Authentication** (3 APIs): Đăng nhập, đăng ký, kiểm tra username
+2. **User Management** (9 APIs): CRUD người dùng - Chỉ ADMIN
+3. **Questions** (7 APIs): CRUD câu hỏi - TEACHER + ADMIN
+4. **Exams** (9 APIs): CRUD kỳ thi, tạo đề ngẫu nhiên - TEACHER + ADMIN
+5. **Test Sessions** (7 APIs): Làm bài thi (PUBLIC), xem kết quả
+6. **Statistics** (8 APIs): Thống kê dashboard, báo cáo - TEACHER + ADMIN
+7. **Reports** (3 APIs): Xuất CSV, báo cáo chi tiết - TEACHER + ADMIN
+8. **Admin Operations** (7 APIs): Xóa hàng loạt, quản lý hệ thống - ADMIN
+
+### Ví Dụ API Cơ Bản
+
+#### 1. Đăng Nhập
 
 ```bash
-# Run all services at once
-start-all.bat
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+# Response:
+{
+  "token": "eyJhbGc...",
+  "id": 1,
+  "username": "admin",
+  "fullName": "Administrator",
+  "role": "ADMIN",
+  "isActive": true
+}
 ```
 
-**Manual:**
+#### 2. Tạo Câu Hỏi
 
 ```bash
-# Terminal 1: Backend
-cd backend && mvn spring-boot:run
+POST http://localhost:8080/questions
+Authorization: Bearer <token>
+Content-Type: application/json
 
-# Terminal 2: Whisper
-cd whisper_server && python whisper_server.py
-
-# Terminal 3: Qwen
-cd qwen_server && python qwen_server.py
+{
+  "content": "Describe your hometown",
+  "level": "EASY"
+}
 ```
+
+#### 3. Học Sinh Làm Bài (Không cần đăng nhập)
+
+```bash
+# Bắt đầu bài thi
+POST http://localhost:8080/test-sessions
+Content-Type: application/json
+
+{
+  "examId": 1,
+  "studentName": "Nguyen Van A",
+  "studentOrganization": "University ABC"
+}
+
+# Nộp câu trả lời
+POST http://localhost:8080/test-sessions/1/submit-answer?questionId=1
+Content-Type: multipart/form-data
+
+audio=@recording.wav
+
+# Hoàn thành bài thi
+POST http://localhost:8080/test-sessions/1/complete
+```
+
+## ✨ Tính Năng
+
+### Tính Năng Admin/Giáo Viên
+
+- ✅ **Quản lý người dùng**: Tạo, cập nhật, vô hiệu hóa (chỉ Admin)
+- ✅ **Ngân hàng câu hỏi**: CRUD với phân loại level
+- ✅ **Câu trả lời mẫu**: Nhiều câu trả lời mẫu cho mỗi câu hỏi với thang điểm
+- ✅ **Tạo đề thi**: Chọn thủ công hoặc tạo ngẫu nhiên
+- ✅ **Tìm kiếm nâng cao**: Tìm kiếm đa tiêu chí cho Questions, Exams, Test Sessions
+- ✅ **Thao tác hàng loạt**: Xóa nhiều câu hỏi, cập nhật trạng thái nhiều kỳ thi
+- ✅ **Dashboard thống kê**: Phân tích và số liệu hiệu suất thời gian thực
+- ✅ **Xuất CSV**: Xuất kết quả thi và báo cáo
+- ✅ **Audit Logs**: Theo dõi xử lý AI (Whisper + Qwen)
+
+### Tính Năng Học Sinh
+
+- ✅ **Không cần đăng ký**: Nhập tên và tổ chức để bắt đầu
+- ✅ **Ghi âm**: Ghi âm câu trả lời trực tiếp
+- ✅ **Phản hồi thời gian thực**: Chấm điểm ngay sau khi nộp
+- ✅ **Phản hồi chi tiết**: Giải thích và gợi ý do AI tạo
+- ✅ **Theo dõi tiến độ**: Xem câu đã trả lời/chưa trả lời
+- ✅ **Báo cáo cuối**: Điểm tổng với chi tiết từng phần
+
+### Tính Năng Kỹ Thuật
+
+- ✅ **JWT Authentication**: Xác thực an toàn dựa trên token
+- ✅ **DTO Pattern**: Tách biệt rõ ràng giữa entities và API contracts
+- ✅ **Soft Delete**: Bảo toàn tính toàn vẹn dữ liệu với deletedAt pattern
+- ✅ **Pagination**: Tải dữ liệu hiệu quả với Spring Data Pageable
+- ✅ **Validation**: Jakarta Bean Validation cho request data
+- ✅ **Error Handling**: Phản hồi lỗi nhất quán
+- ✅ **CORS Support**: CORS có thể cấu hình cho frontend
+- ✅ **File Upload**: Xử lý file audio an toàn
+- ✅ **Async Processing**: Xử lý AI không chặn (non-blocking)
+- ✅ **Transaction Management**: Tuân thủ ACID với @Transactional
+
+## ⚙️ Cấu Hình
+
+### Application Properties
+
+File: `src/main/resources/application.properties`
+
+```properties
+# Server
+server.port=8080
+
+# Database
+spring.datasource.url=jdbc:mysql://localhost:3306/ai_speaking
+spring.datasource.username=root
+spring.datasource.password=your_password
+
+# JPA/Hibernate
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# File Upload
+spring.servlet.multipart.max-file-size=50MB
+spring.servlet.multipart.max-request-size=50MB
+file.upload.dir=./uploads/audio
+
+# AI Services
+ai.whisper.url=http://localhost:5000
+ai.qwen.url=http://localhost:5001
+ai.request.timeout=60000
+
+# JWT Security
+jwt.secret=YourSuperSecretKeyForJWTTokenGenerationChangeThisInProduction
+jwt.expiration=86400000
+
+# CORS
+cors.allowed.origins=http://localhost:3000,http://localhost:3001,http://localhost:4200
+```
+
+### Tùy Chọn Model Whisper
+
+Sửa file `whisper_server.py`:
+
+```python
+# Kích thước model: tiny, base, small, medium, large
+# Lớn hơn = chính xác hơn nhưng chậm hơn
+model = whisper.load_model("base")  # Đổi sang "small" hoặc "medium"
+
+# Sử dụng GPU nếu có
+device = "cuda" if torch.cuda.is_available() else "cpu"
+```
+
+**So sánh Model:**
+
+| Model | Kích thước | Tốc độ | Độ chính xác |
+|-------|-----------|---------|--------------|
+| tiny  | ~40MB | Rất nhanh | Tốt |
+| base  | ~150MB | Nhanh | Tốt hơn |
+| small | ~500MB | Trung bình | Rất tốt |
+| medium| ~1.5GB | Chậm | Xuất sắc |
+| large | ~3GB | Rất chậm | Tốt nhất |
+
+### Tùy Chọn Model Qwen
+
+Sửa file `qwen_server.py`:
+
+```python
+# Tùy chọn model:
+# - Qwen/Qwen2.5-0.5B-Instruct (nhanh nhất, ~500MB)
+# - Qwen/Qwen2.5-1.5B-Instruct (cân bằng, ~1.5GB)
+# - Qwen/Qwen2.5-3B-Instruct (chất lượng tốt nhất, ~3GB)
+
+model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+
+# Tham số generation
+max_new_tokens = 512  # Tăng để feedback dài hơn
+temperature = 0.7     # 0.1-1.0, cao hơn = sáng tạo hơn
+```
+
+### Tùy Chỉnh Prompt Chấm Điểm
+
+Hệ thống sử dụng prompt chi tiết trong `qwen_server.py` với:
+
+- **Tiêu chí chấm điểm rõ ràng**:
+  - Nội dung (40%)
+  - Ngữ pháp (30%)
+  - Từ vựng (20%)
+  - Phát âm & Độ trôi chảy (10%)
+- **So sánh với câu trả lời mẫu**: AI sẽ so sánh câu trả lời với các mẫu được cung cấp
+- **Phản hồi bằng tiếng Việt**: Feedback chi tiết bằng tiếng Việt
+
+## 📚 Cấu Trúc Project
+
+```
+backend/
+├── src/main/java/com/aispeaking/
+│   ├── config/           # Các class cấu hình
+│   │   ├── AppConfig.java
+│   │   ├── CorsConfig.java
+│   │   └── SecurityConfig.java
+│   ├── controller/       # REST Controllers (8)
+│   │   ├── AuthController.java
+│   │   ├── UserController.java
+│   │   ├── QuestionController.java
+│   │   ├── ExamController.java
+│   │   ├── TestSessionController.java
+│   │   ├── StatisticsController.java
+│   │   ├── AdminController.java
+│   │   └── ReportController.java
+│   ├── dto/              # Data Transfer Objects (15+)
+│   │   ├── Request DTOs (User, Question, Exam, Session)
+│   │   └── Response DTOs (với phương thức from() factory)
+│   ├── entity/           # JPA Entities (9)
+│   │   ├── BaseEntity.java
+│   │   ├── User.java
+│   │   ├── Question.java
+│   │   ├── SampleAnswer.java
+│   │   ├── Exam.java
+│   │   ├── ExamQuestion.java
+│   │   ├── TestSession.java
+│   │   ├── TestAnswer.java
+│   │   ├── AIProcessingLog.java
+│   │   └── enums/        # Enums (6)
+│   ├── repository/       # Spring Data JPA Repositories (8)
+│   ├── security/         # Security & JWT
+│   │   ├── JwtAuthenticationFilter.java
+│   │   ├── JwtTokenProvider.java
+│   │   ├── CustomUserDetailsService.java
+│   │   └── UserPrincipal.java
+│   └── service/          # Business Logic Services (6)
+│       ├── UserService.java
+│       ├── QuestionService.java
+│       ├── ExamService.java
+│       ├── TestSessionService.java
+│       ├── AIProcessingService.java
+│       └── StatisticsService.java
+├── src/main/resources/
+│   └── application.properties
+├── database/
+│   └── schema.sql        # Database schema
+├── whisper_server/       # Speech-to-Text AI
+│   ├── whisper_server.py
+│   └── requirements.txt
+├── qwen_server/          # Scoring AI
+│   ├── qwen_server.py
+│   └── requirements.txt
+├── API_DOCUMENTATION.md  # Tài liệu API đầy đủ
+├── start-all.bat         # Script khởi động tất cả
+└── pom.xml               # Maven dependencies
+```
+
+## 🔐 Lưu Ý Bảo Mật
+
+- 🔒 Mật khẩu được mã hóa bằng BCrypt
+- 🎫 JWT tokens hết hạn sau 24 giờ (có thể cấu hình)
+- 🚫 Soft delete ngăn mất dữ liệu
+- ✅ CORS chỉ cho phép các origins được cấu hình
+- 🔑 Các thao tác admin yêu cầu role ADMIN
+- 📝 Audit logs theo dõi tất cả xử lý AI
+
+## 🚀 Mẹo Hiệu Suất
+
+1. **Database**: Thêm indexes cho các trường thường truy vấn
+2. **AI Models**: Sử dụng kích thước model phù hợp với phần cứng
+3. **Caching**: Cân nhắc Redis cho session/token caching
+4. **File Storage**: Sử dụng cloud storage (S3/Azure) cho production
+5. **Load Balancing**: Sử dụng nhiều AI server instances
+6. **Monitoring**: Thêm application performance monitoring (APM)
+
+## 📖 Tài Liệu Bổ Sung
+
+- **Chi tiết API**: Xem [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+- **Database Schema**: Kiểm tra `database/schema.sql`
+- **Phân quyền**: ADMIN (toàn quyền), TEACHER (quản lý câu hỏi, kỳ thi, thống kê)
+
+## 👥 Tác Giả & Credits
+
+- **Backend Framework**: Spring Boot 3.5.9 + Spring Security + Spring Data JPA
+- **AI Models**:
+  - OpenAI Whisper (Speech-to-Text)
+  - Alibaba Qwen 2.5 (Language Model cho chấm điểm)
+- **Database**: MySQL 8.0
+- **Authentication**: JWT (JSON Web Tokens)
+- **Build Tool**: Maven
+- **Java Version**: 21 (LTS)
+
+## 📄 License
+
+MIT License - Tự do sử dụng project này cho mục đích học tập và phát triển.
+
+---
+
+**Được xây dựng với ❤️ sử dụng Spring Boot, Whisper AI, và Qwen AI**
+
 
 ## 📡 API Documentation
 
@@ -222,7 +482,7 @@ cd qwen_server && python qwen_server.py
 ### ❓ Questions Management
 
 - `GET /questions` - Get all questions (paginated, supports filtering)
-- `GET /questions/search` - Advanced search (level, category, createdBy, dates)
+- `GET /questions/search` - Advanced search (level, createdBy, dates)
 - `GET /questions/{id}` - Get question by ID
 - `POST /questions` - Create new question
 - `PUT /questions/{id}` - Update question
@@ -230,8 +490,7 @@ cd qwen_server && python qwen_server.py
 
 **Filter Parameters:**
 
-- `level`: EASY, MEDIUM, HARD
-- `category`: String
+- `level`: EASY, HARD
 - `createdBy`: User ID
 - `createdAfter`, `createdBefore`: Date range
 
@@ -357,7 +616,6 @@ Content-Type: application/json
 {
   "content": "Describe your favorite place to visit",
   "level": "MEDIUM",
-  "category": "Travel",
   "sampleAnswers": [
     {
       "content": "My favorite place is the beach. I love the sound of waves and the fresh sea breeze.",
@@ -430,7 +688,7 @@ POST /test-sessions/1/complete
 
 ```bash
 # Search questions by multiple criteria
-GET /questions/search?level=MEDIUM&category=Travel&createdAfter=2026-01-01&page=0&size=20
+GET /questions/search?level=MEDIUM&createdAfter=2026-01-01&page=0&size=20
 Authorization: Bearer <token>
 
 # Search test sessions with score range
@@ -447,7 +705,7 @@ Authorization: Bearer <token>
 ### Admin/Teacher Features
 
 - ✅ **User Management**: Create, update, deactivate users (Admin only)
-- ✅ **Question Bank**: CRUD operations with level, category classification
+- ✅ **Question Bank**: CRUD operations with level classification
 - ✅ **Sample Answers**: Multiple sample answers per question with scoring rubric
 - ✅ **Exam Creation**: Manual selection or random generation
 - ✅ **Advanced Filtering**: Multi-criteria search for Questions, Exams, Test Sessions

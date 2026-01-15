@@ -57,14 +57,13 @@ public class TestSessionService {
     }
 
     @Transactional
-    public TestSessionResponse createTestSession(Long examId, String studentName, String studentOrganization, String studentEmail) {
+    public TestSessionResponse createTestSession(Long examId, String studentName, String studentOrganization) {
         Exam exam = examService.getExamEntityById(examId);
         
         TestSession testSession = new TestSession();
         testSession.setExam(exam);
         testSession.setStudentName(studentName);
         testSession.setStudentOrganization(studentOrganization);
-        testSession.setStudentEmail(studentEmail);
         testSession.setStartedAt(LocalDateTime.now());
         testSession.setStatus(TestSessionStatus.IN_PROGRESS);
         

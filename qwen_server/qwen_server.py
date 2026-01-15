@@ -75,15 +75,18 @@ def score_answer():
     
     Expected JSON payload:
     {
-        "system_prompt": "Scoring instructions and sample answers",
         "question": "The question text",
-        "user_text": "Student's transcribed answer"
+        "user_text": "Student's transcribed answer",
+        "sample_answers": [
+            {"text": "Sample answer 1", "score": 10},
+            {"text": "Sample answer 2", "score": 8}
+        ]
     }
     
     Returns:
     {
         "score": 8.5,
-        "feedback": "Detailed feedback about the answer"
+        "feedback": "Trả lời bằng tiếng việt"
     }
     """
     try:
@@ -92,30 +95,50 @@ def score_answer():
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        system_prompt = data.get('system_prompt', '')
         question = data.get('question', '')
         user_text = data.get('user_text', '')
+        sample_answers = data.get('sample_answers', [])
         
         if not user_text:
             return jsonify({'error': 'No user_text provided'}), 400
         
-        # Construct the full prompt
-        full_prompt = f"""{system_prompt}
+        # Build system prompt with scoring criteria
+        system_prompt = """Bạn là một giáo viên tiếng Anh chuyên nghiệp, chấm điểm bài thi speaking.
 
-Question: {question}
+QUAN TRỌNG: Bạn sẽ được cung cấp các CÂU TRẢ LỜI MẪU kèm điểm số tham chiếu. Hãy sử dụng chúng làm CĂN CỨ CHÍNH để chấm điểm:
+- So sánh câu trả lời của thí sinh với các mẫu được cung cấp
+- Nếu câu trả lời tương đương hoặc tốt hơn mẫu có điểm X, cho điểm gần X hoặc cao hơn
+- Nếu câu trả lời kém hơn tất cả các mẫu, cho điểm thấp hơn mẫu thấp nhất
+- Điều chỉnh điểm dựa trên chất lượng tương đối so với các mẫu
 
-Student's Answer: {user_text}
+Tiêu chí đánh giá chi tiết (thang điểm 0-10):
+- Nội dung (40%): Trả lời đúng trọng tâm, đầy đủ ý, logic rõ ràng (so với mẫu)
+- Ngữ pháp (30%): Cấu trúc câu đúng, sử dụng thì phù hợp (so với mẫu)
+- Từ vựng (20%): Đa dạng, chính xác, phù hợp ngữ cảnh (so với mẫu)
+- Phát âm & Độ trôi chảy (10%): Rõ ràng, tự nhiên (dựa trên văn bản, so với mẫu)
 
-Please score this answer and provide feedback in JSON format:
-{{"score": <0-10>, "feedback": "<detailed feedback>"}}
-"""
+Hãy trả lời bằng tiếng Việt với định dạng JSON:
+{"score": <0-10>, "feedback": "<nhận xét chi tiết bằng tiếng Việt, có so sánh với mẫu>"}"""
+        
+        # Build sample answers context
+        sample_context = ""
+        if sample_answers:
+            sample_context = "\n\nCâu trả lời mẫu tham khảo:\n"
+            for i, sample in enumerate(sample_answers, 1):
+                sample_context += f"{i}. {sample.get('text', '')} (Điểm mẫu: {sample.get('score', 'N/A')})\n"
         
         logger.info(f"Scoring answer: {user_text[:50]}...")
         
         # Generate response
+        user_message = f"""Câu hỏi: {question}
+{sample_context}
+Câu trả lời của thí sinh: {user_text}
+
+Hãy chấm điểm và đưa ra nhận xét chi tiết bằng tiếng Việt theo định dạng JSON."""
+
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Question: {question}\n\nStudent's Answer: {user_text}\n\nPlease score this answer (0-10) and provide detailed feedback in JSON format."}
+            {"role": "user", "content": user_message}
         ]
         
         text = tokenizer.apply_chat_template(

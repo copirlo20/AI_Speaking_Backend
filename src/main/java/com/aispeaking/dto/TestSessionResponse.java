@@ -25,7 +25,6 @@ public class TestSessionResponse {
     private String examName;
     private String studentName;
     private String studentOrganization;
-    private String studentEmail;
     private BigDecimal totalScore;
     private TestSessionStatus status;
     private LocalDateTime startedAt;
@@ -42,7 +41,6 @@ public class TestSessionResponse {
                 .examName(testSession.getExam() != null ? testSession.getExam().getName() : null)
                 .studentName(testSession.getStudentName())
                 .studentOrganization(testSession.getStudentOrganization())
-                .studentEmail(testSession.getStudentEmail())
                 .totalScore(testSession.getTotalScore())
                 .status(testSession.getStatus())
                 .startedAt(testSession.getStartedAt())
