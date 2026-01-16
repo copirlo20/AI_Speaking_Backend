@@ -33,6 +33,7 @@ public class TestSessionService {
     private final TestSessionRepository testSessionRepository;
     private final TestAnswerRepository testAnswerRepository;
     private final ExamService examService;
+    private final QuestionService questionService;
     private final AIProcessingService aiProcessingService;
 
     @Transactional(readOnly = true)
@@ -74,9 +75,8 @@ public class TestSessionService {
         for (ExamQuestionResponse examQuestionResponse : examQuestions) {
             TestAnswer testAnswer = new TestAnswer();
             testAnswer.setTestSession(savedSession);
-            // Need to get Question entity
-            Question question = new Question();
-            question.setId(examQuestionResponse.getQuestionId());
+            // Get Question entity from database
+            Question question = questionService.getQuestionEntityById(examQuestionResponse.getQuestionId());
             testAnswer.setQuestion(question);
             testAnswer.setProcessingStatus(ProcessingStatus.PENDING);
             testAnswerRepository.save(testAnswer);

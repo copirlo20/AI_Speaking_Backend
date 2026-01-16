@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface SampleAnswerRepository extends JpaRepository<SampleAnswer, Long> {
     
-    List<SampleAnswer> findByQuestionIdAndDeletedAtIsNull(Long questionId);
+    List<SampleAnswer> findByQuestionId(Long questionId);
 }

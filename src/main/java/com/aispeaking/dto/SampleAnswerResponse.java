@@ -22,7 +22,6 @@ public class SampleAnswerResponse {
     private Long questionId;
     private String content;
     private BigDecimal score;
-    private String explanation;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -35,7 +34,6 @@ public class SampleAnswerResponse {
                 .questionId(sampleAnswer.getQuestion() != null ? sampleAnswer.getQuestion().getId() : null)
                 .content(sampleAnswer.getContent())
                 .score(sampleAnswer.getScore())
-                .explanation(sampleAnswer.getExplanation())
                 .createdAt(sampleAnswer.getCreatedAt())
                 .updatedAt(sampleAnswer.getUpdatedAt())
                 .build();

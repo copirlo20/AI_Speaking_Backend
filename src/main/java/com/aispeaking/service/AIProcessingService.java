@@ -116,7 +116,7 @@ public class AIProcessingService {
         
         // Get sample answers for the question
         List<SampleAnswer> sampleAnswers = sampleAnswerRepository
-                .findByQuestionIdAndDeletedAtIsNull(testAnswer.getQuestion().getId());
+                .findByQuestionId(testAnswer.getQuestion().getId());
         
         WebClient webClient = webClientBuilder.baseUrl(qwenUrl).build();
         

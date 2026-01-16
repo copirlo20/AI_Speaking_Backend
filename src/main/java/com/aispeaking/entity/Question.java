@@ -36,7 +36,7 @@ public class Question extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
-    @JsonIgnore  // Completely ignore this field in JSON serialization
+    @JsonIgnore
     private User createdBy;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)

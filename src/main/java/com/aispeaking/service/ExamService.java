@@ -4,6 +4,7 @@ import com.aispeaking.dto.*;
 import com.aispeaking.entity.Exam;
 import com.aispeaking.entity.ExamQuestion;
 import com.aispeaking.entity.Question;
+import com.aispeaking.entity.User;
 import com.aispeaking.entity.enums.ExamStatus;
 import com.aispeaking.entity.enums.QuestionLevel;
 import com.aispeaking.repository.ExamQuestionRepository;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,11 +30,12 @@ public class ExamService {
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final QuestionService questionService;
+    private final UserService userService;
 
     @Transactional(readOnly = true)
     public Page<ExamResponse> getAllExams(Pageable pageable) {
-        return examRepository.findByDeletedAtIsNull(pageable)
-                .map(ExamResponse::from);
+        return examRepository.findAll(pageable)
+            .map(ExamResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +52,6 @@ public class ExamService {
     @Transactional(readOnly = true)
     public ExamResponse getExamById(Long id) {
         Exam exam = examRepository.findById(id)
-                .filter(e -> e.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
         return ExamResponse.from(exam);
     }
@@ -56,7 +59,6 @@ public class ExamService {
     @Transactional(readOnly = true)
     public Exam getExamEntityById(Long id) {
         return examRepository.findById(id)
-                .filter(e -> e.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
     }
 
@@ -68,6 +70,13 @@ public class ExamService {
         exam.setDurationMinutes(request.getDurationMinutes());
         exam.setTotalQuestions(request.getTotalQuestions());
         exam.setStatus(request.getStatus() != null ? request.getStatus() : ExamStatus.DRAFT);
+        
+        // Set createdBy from current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            User createdBy = userService.getUserEntityByUsername(authentication.getName());
+            exam.setCreatedBy(createdBy);
+        }
         
         Exam savedExam = examRepository.save(exam);
         log.info("Creating new exam: {}", exam.getName());
@@ -101,10 +110,8 @@ public class ExamService {
 
     @Transactional
     public void deleteExam(Long id) {
-        Exam exam = getExamEntityById(id);
-        exam.softDelete();
-        examRepository.save(exam);
-        log.info("Soft deleted exam with id: {}", id);
+        examRepository.deleteById(id);
+        log.info("Deleted exam with id: {}", id);
     }
 
     @Transactional

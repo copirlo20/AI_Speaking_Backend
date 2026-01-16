@@ -29,7 +29,6 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
-                .filter(u -> u.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return UserResponse.from(user);
     }
@@ -37,20 +36,19 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getUserEntityById(Long id) {
         return userRepository.findById(id)
-                .filter(u -> u.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public UserResponse getUserByUsername(String username) {
-        User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
         return UserResponse.from(user);
     }
     
     @Transactional(readOnly = true)
     public User getUserEntityByUsername(String username) {
-        return userRepository.findByUsernameAndDeletedAtIsNull(username)
+        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
 
@@ -148,16 +146,14 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        User user = getUserEntityById(id);
-        user.softDelete();
-        userRepository.save(user);
-        log.info("Soft deleted user with id: {}", id);
+        userRepository.deleteById(id);
+        log.info("Hard deleted user with id: {}", id);
     }
-
+    
     @Transactional(readOnly = true)
     public long countActiveUsers() {
         return userRepository.findAll().stream()
-                .filter(u -> u.getIsActive() && u.getDeletedAt() == null)
+                .filter(u -> u.getIsActive())
                 .count();
     }
 }

@@ -35,7 +35,6 @@ CREATE TABLE sample_answers (
     question_id BIGINT NOT NULL,
     content TEXT NOT NULL,
     score DECIMAL(5,2) NOT NULL CHECK (score >= 0 AND score <= 10),
-    explanation TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,

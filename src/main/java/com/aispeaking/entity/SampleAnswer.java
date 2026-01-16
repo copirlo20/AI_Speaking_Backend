@@ -33,7 +33,4 @@ public class SampleAnswer extends BaseEntity {
 
     @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal score;
-
-    @Column(columnDefinition = "TEXT")
-    private String explanation;
 }

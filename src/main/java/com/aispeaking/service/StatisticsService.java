@@ -35,15 +35,13 @@ public class StatisticsService {
         
         // Total counts
         stats.put("totalQuestions", questionRepository.findAll().stream()
-                .filter(q -> q.getDeletedAt() == null)
                 .count());
         
         stats.put("totalExams", examRepository.findAll().stream()
-                .filter(e -> e.getDeletedAt() == null)
                 .count());
         
         stats.put("activeExams", examRepository.findAll().stream()
-                .filter(e -> e.getDeletedAt() == null && e.getStatus() == ExamStatus.ACTIVE)
+                .filter(e -> e.getStatus() == ExamStatus.ACTIVE)
                 .count());
         
         stats.put("totalTestSessions", testSessionRepository.count());
@@ -53,7 +51,7 @@ public class StatisticsService {
                 .count());
         
         stats.put("activeUsers", userRepository.findAll().stream()
-                .filter(u -> u.getIsActive() && u.getDeletedAt() == null)
+                .filter(u -> u.getIsActive())
                 .count());
         
         // Average scores
@@ -81,7 +79,7 @@ public class StatisticsService {
         
         for (QuestionLevel level : QuestionLevel.values()) {
             long count = questionRepository.findAll().stream()
-                    .filter(q -> q.getDeletedAt() == null && q.getLevel() == level)
+                    .filter(q -> q.getLevel() == level)
                     .count();
             stats.put(level.name(), count);
         }
@@ -95,7 +93,7 @@ public class StatisticsService {
         
         for (ExamStatus status : ExamStatus.values()) {
             long count = examRepository.findAll().stream()
-                    .filter(e -> e.getDeletedAt() == null && e.getStatus() == status)
+                    .filter(e -> e.getStatus() == status)
                     .count();
             stats.put(status.name(), count);
         }
@@ -248,15 +246,13 @@ public class StatisticsService {
         Map<String, Object> stats = new HashMap<>();
         
         long questionsCreated = questionRepository.findAll().stream()
-                .filter(q -> q.getDeletedAt() == null 
-                        && q.getCreatedAt().isAfter(startDate) 
+                .filter(q -> q.getCreatedAt().isAfter(startDate) 
                         && q.getCreatedAt().isBefore(endDate))
                 .count();
         stats.put("questionsCreated", questionsCreated);
         
         long examsCreated = examRepository.findAll().stream()
-                .filter(e -> e.getDeletedAt() == null 
-                        && e.getCreatedAt().isAfter(startDate) 
+                .filter(e -> e.getCreatedAt().isAfter(startDate) 
                         && e.getCreatedAt().isBefore(endDate))
                 .count();
         stats.put("examsCreated", examsCreated);

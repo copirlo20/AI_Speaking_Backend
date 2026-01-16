@@ -14,15 +14,17 @@ import java.time.LocalDateTime;
 @Repository
 public interface ExamRepository extends JpaRepository<Exam, Long> {
     
-    Page<Exam> findByDeletedAtIsNull(Pageable pageable);
+    Page<Exam> findAll(Pageable pageable);
     
-    Page<Exam> findByStatusAndDeletedAtIsNull(ExamStatus status, Pageable pageable);
+    Page<Exam> findByStatus(ExamStatus status, Pageable pageable);
     
-    @Query("SELECT e FROM Exam e WHERE e.deletedAt IS NULL " +
-           "AND (:status IS NULL OR e.status = :status) " +
-           "AND (:createdByUsername IS NULL OR e.createdBy.username = :createdByUsername) " +
-           "AND (:fromDate IS NULL OR e.createdAt >= :fromDate) " +
-           "AND (:toDate IS NULL OR e.createdAt <= :toDate)")
+    @Query("""
+        SELECT e FROM Exam e
+        WHERE (:status IS NULL OR e.status = :status)
+        AND (:createdByUsername IS NULL OR e.createdBy.username = :createdByUsername)
+        AND (:fromDate IS NULL OR e.createdAt >= :fromDate)
+        AND (:toDate IS NULL OR e.createdAt <= :toDate)
+    """)
     Page<Exam> findByCriteria(
         @Param("status") ExamStatus status,
         @Param("createdByUsername") String createdByUsername,

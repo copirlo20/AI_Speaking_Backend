@@ -323,7 +323,7 @@
 ---
 
 ### 3.5 Tạo câu hỏi mới
-**Nhiệm vụ:** Thêm câu hỏi mới vào ngân hàng câu hỏi
+**Nhiệm vụ:** Thêm câu hỏi mới vào ngân hàng câu hỏi (có thể kèm sample answers)
 
 **URL:** `POST /questions`
 
@@ -331,9 +331,25 @@
 ```json
 {
   "content": "Describe your hometown",
-  "level": "EASY"
+  "level": "EASY",
+  "sampleAnswers": [
+    {
+      "content": "My hometown is a small city in the north of Vietnam...",
+      "score": 1
+    },
+    {
+      "content": "My hometown is a beautiful coastal city with stunning beaches...",
+      "score": 5
+    },
+    {
+      "content": "I come from Hanoi, the capital city of Vietnam. It's a bustling metropolis...",
+      "score": 10
+    }
+  ]
 }
 ```
+
+**Lưu ý:** Field `sampleAnswers` là optional - có thể tạo câu hỏi không có sample answers
 
 **Response:** Giống như 3.2
 
@@ -360,6 +376,97 @@
 **Nhiệm vụ:** Xóa câu hỏi khỏi hệ thống
 
 **URL:** `DELETE /questions/{id}`
+
+**Response:** `204 No Content`
+
+---
+
+### 3.8 Lấy danh sách sample answers của câu hỏi
+**Nhiệm vụ:** Xem tất cả các câu trả lời mẫu của một câu hỏi
+
+**URL:** `GET /questions/{questionId}/sample-answers`
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "questionId": 5,
+    "content": "My hometown is a small city in the north of Vietnam...",
+    "score": 1,
+    "createdAt": "2026-01-15T10:00:00",
+    "updatedAt": "2026-01-15T10:00:00"
+  },
+  {
+    "id": 2,
+    "questionId": 5,
+    "content": "My hometown is a beautiful coastal city...",
+    "score": 5,
+    "createdAt": "2026-01-15T10:00:00",
+    "updatedAt": "2026-01-15T10:00:00"
+  }
+]
+```
+
+---
+
+### 3.9 Lấy chi tiết một sample answer
+**Nhiệm vụ:** Xem thông tin chi tiết của một sample answer
+
+**URL:** `GET /questions/{questionId}/sample-answers/{sampleAnswerId}`
+
+**Response:**
+```json
+{
+  "id": 1,
+  "questionId": 5,
+  "content": "My hometown is a small city in the north of Vietnam...",
+  "score": 1,
+  "createdAt": "2026-01-15T10:00:00",
+  "updatedAt": "2026-01-15T10:00:00"
+}
+```
+
+---
+
+### 3.10 Tạo sample answer mới
+**Nhiệm vụ:** Thêm một câu trả lời mẫu cho câu hỏi
+
+**URL:** `POST /questions/{questionId}/sample-answers`
+
+**Request:**
+```json
+{
+  "content": "I come from Hanoi, the capital city of Vietnam. It's a bustling metropolis with rich history and culture...",
+  "score": 10
+}
+```
+
+**Response:** Giống như 3.9
+
+---
+
+### 3.11 Cập nhật sample answer
+**Nhiệm vụ:** Sửa thông tin của sample answer
+
+**URL:** `PUT /questions/{questionId}/sample-answers/{sampleAnswerId}`
+
+**Request:**
+```json
+{
+  "content": "Updated sample answer content...",
+  "score": 8
+}
+```
+
+**Response:** Giống như 3.9
+
+---
+
+### 3.12 Xóa sample answer
+**Nhiệm vụ:** Xóa sample answer khỏi câu hỏi
+
+**URL:** `DELETE /questions/{questionId}/sample-answers/{sampleAnswerId}`
 
 **Response:** `204 No Content`
 
@@ -1098,6 +1205,7 @@ Authorization: Bearer <your-jwt-token>
   
 - **TEACHER**: Quản lý nội dung và xem báo cáo
   - Quản lý câu hỏi (/questions/**)
+  - Quản lý sample answers (/questions/{questionId}/sample-answers/**)
   - Quản lý kỳ thi (/exams/**)
   - Xem bài thi của học sinh (/test-sessions - GET only)
   - Xem thống kê (/statistics/**)

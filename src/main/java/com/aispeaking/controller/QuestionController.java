@@ -99,14 +99,25 @@ public class QuestionController {
     /**
      * Create new question
      * POST /questions
-     * 
+     *
      * Request JSON:
      * {
      *   "content": "Describe your hometown",
-     *   "level": "EASY"
+     *   "level": "EASY",
+     *   "sampleAnswers": [
+     *     {
+     *       "content": "My hometown is a small city...",
+     *       "score": 1
+     *     },
+     *     {
+     *       "content": "My hometown is a beautiful coastal city...",
+     *       "score": 5
+     *     }
+     *   ]
      * }
-     * 
-     * Response JSON: Same as getQuestionById
+     *
+     * Response JSON:
+     * Same as getQuestionById
      */
     @PostMapping
     public ResponseEntity<QuestionResponse> createQuestion(@Valid @RequestBody CreateQuestionRequest request) {
@@ -141,6 +152,94 @@ public class QuestionController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long id) {
         questionService.deleteQuestion(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    // ============= Sample Answer Endpoints =============
+    
+    /**
+     * Get all sample answers for a question
+     * GET /questions/{questionId}/sample-answers
+     * 
+     * Response JSON:
+     * [
+     *   {
+     *     "id": 1,
+     *     "questionId": 5,
+     *     "content": "My hometown is a small city...",
+     *     "score": 1,
+     *     "createdAt": "2026-01-15T10:00:00"
+     *   }
+     * ]
+     */
+    @GetMapping("/{questionId}/sample-answers")
+    public ResponseEntity<List<SampleAnswerResponse>> getSampleAnswers(@PathVariable Long questionId) {
+        return ResponseEntity.ok(questionService.getSampleAnswers(questionId));
+    }
+    
+    /**
+     * Get a specific sample answer
+     * GET /questions/{questionId}/sample-answers/{sampleAnswerId}
+     * 
+     * Response JSON: Same as item in getSampleAnswers
+     */
+    @GetMapping("/{questionId}/sample-answers/{sampleAnswerId}")
+    public ResponseEntity<SampleAnswerResponse> getSampleAnswerById(
+            @PathVariable Long questionId,
+            @PathVariable Long sampleAnswerId) {
+        return ResponseEntity.ok(questionService.getSampleAnswerById(questionId, sampleAnswerId));
+    }
+    
+    /**
+     * Create a new sample answer for a question
+     * POST /questions/{questionId}/sample-answers
+     * 
+     * Request JSON:
+     * {
+     *   "content": "My hometown is a beautiful coastal city...",
+     *   "score": 5
+     * }
+     * 
+     * Response JSON: Same as getSampleAnswerById
+     */
+    @PostMapping("/{questionId}/sample-answers")
+    public ResponseEntity<SampleAnswerResponse> createSampleAnswer(
+            @PathVariable Long questionId,
+            @Valid @RequestBody CreateSampleAnswerRequest request) {
+        return ResponseEntity.ok(questionService.createSampleAnswer(questionId, request));
+    }
+    
+    /**
+     * Update a sample answer
+     * PUT /questions/{questionId}/sample-answers/{sampleAnswerId}
+     * 
+     * Request JSON:
+     * {
+     *   "content": "Updated content...",
+     *   "score": 8
+     * }
+     * 
+     * Response JSON: Same as getSampleAnswerById
+     */
+    @PutMapping("/{questionId}/sample-answers/{sampleAnswerId}")
+    public ResponseEntity<SampleAnswerResponse> updateSampleAnswer(
+            @PathVariable Long questionId,
+            @PathVariable Long sampleAnswerId,
+            @Valid @RequestBody UpdateSampleAnswerRequest request) {
+        return ResponseEntity.ok(questionService.updateSampleAnswer(questionId, sampleAnswerId, request));
+    }
+    
+    /**
+     * Delete a sample answer
+     * DELETE /questions/{questionId}/sample-answers/{sampleAnswerId}
+     * 
+     * Response: 204 No Content
+     */
+    @DeleteMapping("/{questionId}/sample-answers/{sampleAnswerId}")
+    public ResponseEntity<Void> deleteSampleAnswer(
+            @PathVariable Long questionId,
+            @PathVariable Long sampleAnswerId) {
+        questionService.deleteSampleAnswer(questionId, sampleAnswerId);
         return ResponseEntity.noContent().build();
     }
 }

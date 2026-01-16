@@ -15,16 +15,17 @@ import java.util.List;
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     
-    Page<Question> findByDeletedAtIsNull(Pageable pageable);
+    Page<Question> findAll(Pageable pageable);
     
-    Page<Question> findByLevelAndDeletedAtIsNull(QuestionLevel level, Pageable pageable);
+    Page<Question> findByLevel(QuestionLevel level, Pageable pageable);
     
-    @Query("SELECT q FROM Question q WHERE q.deletedAt IS NULL " +
-           "AND (:level IS NULL OR q.level = :level) " +
-           "AND (:category IS NULL OR q.category = :category) " +
-           "AND (:createdByUsername IS NULL OR q.createdBy.username = :createdByUsername) " +
-           "AND (:fromDate IS NULL OR q.createdAt >= :fromDate) " +
-           "AND (:toDate IS NULL OR q.createdAt <= :toDate)")
+    @Query("""
+        SELECT q FROM Question q
+        WHERE (:level IS NULL OR q.level = :level)
+        AND (:createdByUsername IS NULL OR q.createdBy.username = :createdByUsername)
+        AND (:fromDate IS NULL OR q.createdAt >= :fromDate)
+        AND (:toDate IS NULL OR q.createdAt <= :toDate)
+    """)
     Page<Question> findByCriteria(
         @Param("level") QuestionLevel level,
         @Param("createdByUsername") String createdByUsername,
@@ -33,9 +34,11 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
         Pageable pageable
     );
     
-    @Query("SELECT q FROM Question q WHERE q.deletedAt IS NULL " +
-           "AND (:level IS NULL OR q.level = :level) " +
-           "ORDER BY RAND()")
+    @Query("""
+        SELECT q FROM Question q
+        WHERE (:level IS NULL OR q.level = :level)
+        ORDER BY RAND()
+    """)
     List<Question> findRandomQuestions(
         @Param("level") QuestionLevel level,
         Pageable pageable

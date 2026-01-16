@@ -86,6 +86,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/questions/{id}").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/questions/{id}").hasAnyRole("TEACHER", "ADMIN")
                 
+                // Sample Answers Management (nested under questions)
+                .requestMatchers(HttpMethod.GET, "/questions/{questionId}/sample-answers").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/questions/{questionId}/sample-answers/{id}").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/questions/{questionId}/sample-answers").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/questions/{questionId}/sample-answers/{id}").hasAnyRole("TEACHER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/questions/{questionId}/sample-answers/{id}").hasAnyRole("TEACHER", "ADMIN")
+                
                 // ============================================
                 // TEACHER + ADMIN - Exam Management
                 // ============================================
