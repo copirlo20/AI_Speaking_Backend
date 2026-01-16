@@ -15,7 +15,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -161,7 +160,7 @@ public class AIProcessingService {
     }
 
     private void logAIRequest(TestAnswer testAnswer, AIServiceType serviceType, 
-                             String request, String response, Integer processingTime, String error) {
+                                String request, String response, Integer processingTime, String error) {
         AIProcessingLog log = new AIProcessingLog();
         log.setTestAnswer(testAnswer);
         log.setServiceType(serviceType);

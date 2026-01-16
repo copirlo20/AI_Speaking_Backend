@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import java.util.concurrent.Executor;
 
 @Configuration
@@ -20,12 +19,12 @@ public class AppConfig {
     private String qwenUrl;
 
     @Bean
-    public WebClient.Builder webClientBuilder() {
+    WebClient.Builder webClientBuilder() {
         return WebClient.builder();
     }
 
     @Bean(name = "taskExecutor")
-    public Executor taskExecutor() {
+    Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(10);

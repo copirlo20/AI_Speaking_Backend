@@ -3,53 +3,16 @@
 
 # Maven
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-
-# Eclipse
-.project
-.classpath
-.settings/
-bin/
-
-# IntelliJ IDEA
-.idea/
-*.iml
-*.ipr
-*.iws
-out/
 
 # VS Code
 .vscode/
 
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-ENV/
-*.egg-info/
 
 # AI Models
 *.pt
-*.pth
-*.bin
-models/
 
 # Upload files
 uploads/
 audio/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Database
-*.db
-*.sqlite

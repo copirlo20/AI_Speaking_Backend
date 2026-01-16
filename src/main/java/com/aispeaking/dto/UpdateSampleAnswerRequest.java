@@ -1,7 +1,6 @@
 package com.aispeaking.dto;
 
 import lombok.Data;
-
 import java.math.BigDecimal;
 
 /**
