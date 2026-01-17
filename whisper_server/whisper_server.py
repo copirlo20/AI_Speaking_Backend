@@ -21,7 +21,7 @@ CORS(app)
 # Load Whisper model (you can choose: tiny, base, small, medium, large)
 # 'base' is a good balance between speed and accuracy for local usage
 logger.info("Loading Whisper model...")
-model = whisper.load_model("base")
+model = whisper.load_model("medium", download_root=".")
 logger.info("Whisper model loaded successfully!")
 
 
@@ -37,70 +37,47 @@ def health_check():
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe_audio():
-    """
-    Transcribe audio file to text
-    
-    Expected JSON payload:
-    {
-        "audio_data": "base64_encoded_audio" or binary audio data
-    }
-    
-    Returns:
-    {
-        "text": "transcribed text",
-        "language": "detected language",
-        "confidence": 0.95
-    }
-    """
     try:
-        data = request.get_json()
-        
-        if not data or 'audio_data' not in data:
-            # Try to get file from form data
-            if 'audio' in request.files:
-                audio_file = request.files['audio']
-                
-                # Save to temporary file
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio:
-                    audio_file.save(temp_audio.name)
-                    temp_audio_path = temp_audio.name
-            else:
-                return jsonify({'error': 'No audio data provided'}), 400
-        else:
+        # Use fixed temp file path instead of creating new temp files
+        temp_audio_path = 'recorded.wav'
+        data = request.get_json(silent=True)
+
+        if data and 'audio_data' in data:
             audio_data = data['audio_data']
-            
-            # Decode base64 if needed
+
             if isinstance(audio_data, str):
-                try:
-                    audio_bytes = base64.b64decode(audio_data)
-                except:
-                    return jsonify({'error': 'Invalid base64 audio data'}), 400
+                audio_bytes = base64.b64decode(audio_data)
             else:
                 audio_bytes = audio_data
-            
-            # Save to temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio:
-                temp_audio.write(audio_bytes)
-                temp_audio_path = temp_audio.name
-        
+
+            # Write directly to fixed file (overwrite)
+            with open(temp_audio_path, 'wb') as f:
+                f.write(audio_bytes)
+
+        elif 'audio' in request.files:
+            audio_file = request.files['audio']
+
+            # Save directly to fixed file (overwrite)
+            audio_file.save(temp_audio_path)
+
+        else:
+            return jsonify({'error': 'No audio data provided'}), 400
+
         logger.info(f"Processing audio file: {temp_audio_path}")
-        
-        # Transcribe with Whisper
+
+        if not os.path.exists(temp_audio_path):
+            raise FileNotFoundError(temp_audio_path)
+
         result = model.transcribe(temp_audio_path, language='en')
-        
-        # Clean up temporary file
-        os.unlink(temp_audio_path)
-        
-        response = {
-            'text': result['text'].strip(),
+
+        # Don't delete the file, just keep it for next request to overwrite
+
+        return jsonify({
+            'transcribedText': result['text'].strip(),
             'language': result.get('language', 'en'),
             'segments': len(result.get('segments', []))
-        }
-        
-        logger.info(f"Transcription successful: {response['text'][:50]}...")
-        
-        return jsonify(response), 200
-        
+        }), 200
+
     except Exception as e:
         logger.error(f"Error during transcription: {str(e)}")
         return jsonify({'error': str(e)}), 500

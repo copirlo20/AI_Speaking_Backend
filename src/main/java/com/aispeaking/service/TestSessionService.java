@@ -87,21 +87,28 @@ public class TestSessionService {
 
     @Transactional
     public TestAnswerResponse submitAnswer(Long testSessionId, Long questionId, MultipartFile audioFile) throws IOException {
+        log.info("Starting submit answer for test session {} question {}", testSessionId, questionId);
+        
         // Find the test answer
         TestAnswer testAnswer = testAnswerRepository.findByTestSessionId(testSessionId).stream()
                 .filter(ta -> ta.getQuestion().getId().equals(questionId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Test answer not found"));
         
-        // Save audio file
+        // Save audio file first
         String audioUrl = saveAudioFile(audioFile, testSessionId, questionId);
         testAnswer.setAudioUrl(audioUrl);
         testAnswer.setAnsweredAt(LocalDateTime.now());
-        testAnswer.setProcessingStatus(ProcessingStatus.TRANSCRIBING);
+        
+        // Process with AI synchronously (blocks until Whisper and Qwen complete)
+        // This will update all fields: transcribedText, score, feedback, processingStatus
+        aiProcessingService.processTestAnswerSync(testAnswer);
+        
+        // Save to DB only ONCE after all processing is complete
         TestAnswer savedAnswer = testAnswerRepository.save(testAnswer);
         
-        // Process with AI (async)
-        aiProcessingService.processTestAnswer(savedAnswer);
+        log.info("Completed submit answer for test session {} question {}, status: {}, score: {}", 
+                testSessionId, questionId, savedAnswer.getProcessingStatus(), savedAnswer.getScore());
         
         return TestAnswerResponse.from(savedAnswer);
     }

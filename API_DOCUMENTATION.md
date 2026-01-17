@@ -791,13 +791,30 @@
 - `questionId`: Long (ID câu hỏi)
 - `audio`: MultipartFile (file audio: wav, mp3, m4a, max 50MB)
 
-**Response:** Một object TestAnswerResponse (giống item trong 5.5)
+**Response Sau Khi Xử Lý Xong (200 OK):**
+```json
+{
+  "id": 1,
+  "testSessionId": 1,
+  "questionId": 5,
+  "questionContent": "Describe your hometown",
+  "transcribedText": "My hometown is Ha Noi. It is a beautiful city with rich history and culture...",
+  "score": 8.5,
+  "feedback": "Phát âm: 9/10. Ngữ pháp tốt, từ vựng phong phú. Bạn đã diễn đạt rõ ràng và mạch lạc.",
+  "processingStatus": "COMPLETED",
+  "answeredAt": "2026-01-15T14:35:00",
+  "createdAt": "2026-01-15T14:35:00",
+  "updatedAt": "2026-01-15T14:35:30"
+}
+```
 
 **Lưu ý:** 
-- Việc xử lý âm thanh (transcribe và score) diễn ra bất đồng bộ
-- Ban đầu `processingStatus` sẽ là `PENDING`
-- Sau khi xử lý xong sẽ chuyển thành `COMPLETED` hoặc `FAILED`
-- Client cần poll lại để lấy kết quả cuối cùng
+- **API xử lý đồng bộ** - sẽ đợi cho đến khi Whisper và Qwen xử lý xong mới trả về response
+- Quá trình xử lý: `PENDING` → `TRANSCRIBING` → `SCORING` → `COMPLETED` hoặc `FAILED`
+- **Response trả về đã có đầy đủ kết quả**: transcribedText, score, feedback với status `COMPLETED` hoặc `FAILED`
+- **Thời gian chờ**: 5-30 giây tùy độ dài audio (client cần hiển thị loading indicator)
+- **Timeout**: Nếu quá 60 giây không xử lý xong sẽ trả về lỗi
+- **Không cần poll**: Kết quả đã có ngay trong response, không cần gọi lại API
 
 ---
 

@@ -76,10 +76,10 @@ def score_answer():
     Expected JSON payload:
     {
         "question": "The question text",
-        "user_text": "Student's transcribed answer",
+        "transcribedText": "Student's transcribed answer",
         "sample_answers": [
-            {"text": "Sample answer 1", "score": 10},
-            {"text": "Sample answer 2", "score": 8}
+            {"content": "Sample answer 1", "score": 10},
+            {"content": "Sample answer 2", "score": 8}
         ]
     }
     
@@ -96,11 +96,11 @@ def score_answer():
             return jsonify({'error': 'No data provided'}), 400
         
         question = data.get('question', '')
-        user_text = data.get('user_text', '')
+        transcribedText = data.get('transcribedText', '')
         sample_answers = data.get('sample_answers', [])
         
-        if not user_text:
-            return jsonify({'error': 'No user_text provided'}), 400
+        if not transcribedText:
+            return jsonify({'error': 'No transcribedText provided'}), 400
         
         # Build system prompt with scoring criteria
         system_prompt = """Bạn là một giáo viên tiếng Anh chuyên nghiệp, chấm điểm bài thi speaking.
@@ -125,14 +125,14 @@ Hãy trả lời bằng tiếng Việt với định dạng JSON:
         if sample_answers:
             sample_context = "\n\nCâu trả lời mẫu tham khảo:\n"
             for i, sample in enumerate(sample_answers, 1):
-                sample_context += f"{i}. {sample.get('text', '')} (Điểm mẫu: {sample.get('score', 'N/A')})\n"
+                sample_context += f"{i}. {sample.get('content', '')} (Điểm mẫu: {sample.get('score', 'N/A')})\n"
         
-        logger.info(f"Scoring answer: {user_text[:50]}...")
+        logger.info(f"Scoring answer: {transcribedText[:50]}...")
         
         # Generate response
         user_message = f"""Câu hỏi: {question}
 {sample_context}
-Câu trả lời của thí sinh: {user_text}
+Câu trả lời của thí sinh: {transcribedText}
 
 Hãy chấm điểm và đưa ra nhận xét chi tiết bằng tiếng Việt theo định dạng JSON."""
 
