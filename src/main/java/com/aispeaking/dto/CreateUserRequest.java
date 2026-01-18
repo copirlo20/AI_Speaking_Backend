@@ -3,15 +3,12 @@ package com.aispeaking.dto;
 import lombok.Data;
 
 /**
- * DTO for creating new user account
- * Role is always set to TEACHER by default (cannot be specified by client)
+ * DTO cho việc tạo tài khoản người dùng mới
+ * Vai trò luôn được đặt là TEACHER theo mặc định (không thể được chỉ định bởi client)
  */
 @Data
 public class CreateUserRequest {
-    
     private String username;
-    
     private String password;
-    
     private String fullName;
 }

@@ -9,14 +9,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * DTO for SampleAnswer response
+ * DTO cho phản hồi SampleAnswer
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class SampleAnswerResponse {
-    
     private Long id;
     private Long questionId;
     private String content;
@@ -25,7 +24,7 @@ public class SampleAnswerResponse {
     private LocalDateTime updatedAt;
     
     /**
-     * Convert SampleAnswer entity to SampleAnswerResponse DTO
+     * Chuyển đổi entity SampleAnswer thành DTO SampleAnswerResponse
      */
     public static SampleAnswerResponse from(SampleAnswer sampleAnswer) {
         return SampleAnswerResponse.builder()

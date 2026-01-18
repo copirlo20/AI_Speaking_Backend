@@ -4,11 +4,10 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * DTO for updating a sample answer
+ * DTO cho việc cập nhật câu trả lời mẫu
  */
 @Data
 public class UpdateSampleAnswerRequest {
-    
     private String content;
     private BigDecimal score;
 }

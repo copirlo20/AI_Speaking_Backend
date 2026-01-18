@@ -10,15 +10,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * DTO for TestSession response
- * Basic information without lazy-loaded relations
+ * DTO cho phản hồi TestSession
+ * Thông tin cơ bản không có các quan hệ lazy-loaded
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestSessionResponse {
-    
     private Long id;
     private Long examId;
     private String examName;
@@ -31,7 +30,7 @@ public class TestSessionResponse {
     private LocalDateTime createdAt;
     
     /**
-     * Convert TestSession entity to TestSessionResponse DTO
+     * Chuyển đổi entity TestSession thành DTO TestSessionResponse
      */
     public static TestSessionResponse from(TestSession testSession) {
         return TestSessionResponse.builder()

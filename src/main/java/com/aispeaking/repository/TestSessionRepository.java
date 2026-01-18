@@ -13,9 +13,7 @@ import java.time.LocalDateTime;
 
 @Repository
 public interface TestSessionRepository extends JpaRepository<TestSession, Long> {
-    
     Page<TestSession> findByExamId(Long examId, Pageable pageable);
-    
     Page<TestSession> findByStatus(TestSessionStatus status, Pageable pageable);
     
     @Query("SELECT t FROM TestSession t WHERE 1=1 " +

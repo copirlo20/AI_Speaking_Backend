@@ -16,40 +16,34 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public Page<UserResponse> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(UserResponse::from);
+        return userRepository.findAll(pageable).map(UserResponse::from);
     }
 
     @Transactional(readOnly = true)
     public UserResponse getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return UserResponse.from(user);
     }
     
     @Transactional(readOnly = true)
     public User getUserEntityById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public UserResponse getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found with username: " + username));
         return UserResponse.from(user);
     }
     
     @Transactional(readOnly = true)
     public User getUserEntityByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
 
     @Transactional
@@ -57,51 +51,47 @@ public class UserService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists: " + request.getUsername());
         }
-        
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
-        user.setRole(UserRole.TEACHER); // Default role
+        user.setRole(UserRole.TEACHER); // Vai trò mặc định
         user.setIsActive(true);
-        
         User savedUser = userRepository.save(user);
         log.info("Creating new user: {}", user.getUsername());
         return UserResponse.from(savedUser);
     }
 
     /**
-     * Create new user account with default TEACHER role
-     * This method ensures role is always TEACHER and cannot be overridden
+     * Tạo tài khoản người dùng mới với vai trò TEACHER mặc định
+     * Phương thức này đảm bảo vai trò luôn là TEACHER và không thể bị ghi đè
      * 
-     * @param username Username (must be unique)
-     * @param password Password (will be encrypted)
-     * @param fullName Full name of user
-     * @return UserResponse DTO
+     * param username Tên đăng nhập (phải là duy nhất)
+     * param password Mật khẩu (sẽ được mã hóa)
+     * param fullName Họ và tên đầy đủ của người dùng
+     * return UserResponse DTO
      */
     @Transactional
     public UserResponse createTeacherAccount(String username, String password, String fullName) {
         if (userRepository.existsByUsername(username)) {
             throw new RuntimeException("Username already exists: " + username);
         }
-        
         User user = new User();
         user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password)); // Encrypt password
+        user.setPassword(passwordEncoder.encode(password)); // Mã hóa mật khẩu
         user.setFullName(fullName);
-        user.setRole(UserRole.TEACHER); // Always TEACHER by default
+        user.setRole(UserRole.TEACHER); // Luôn là TEACHER theo mặc định
         user.setIsActive(true);
-        
         User savedUser = userRepository.save(user);
         log.info("Created new TEACHER account: {} (ID: {})", username, savedUser.getId());
         return UserResponse.from(savedUser);
     }
 
     /**
-     * Check if username exists
+     * Kiểm tra xem tên đăng nhập đã tồn tại chưa
      * 
-     * @param username Username to check
-     * @return true if username exists, false otherwise
+     * param username Tên đăng nhập cần kiểm tra
+     * return true nếu tên đăng nhập tồn tại, false nếu không
      */
     @Transactional(readOnly = true)
     public boolean usernameExists(String username) {
@@ -111,7 +101,6 @@ public class UserService {
     @Transactional
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = getUserEntityById(id);
-        
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
         }
@@ -121,7 +110,6 @@ public class UserService {
         if (request.getIsActive() != null) {
             user.setIsActive(request.getIsActive());
         }
-        
         User savedUser = userRepository.save(user);
         log.info("Updated user with id: {}", id);
         return UserResponse.from(savedUser);
@@ -130,7 +118,7 @@ public class UserService {
     @Transactional
     public void changePassword(Long id, String newPassword) {
         User user = getUserEntityById(id);
-        // Encrypt password
+        // Mã hóa mật khẩu
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         log.info("Changed password for user: {}", user.getUsername());
@@ -152,8 +140,6 @@ public class UserService {
     
     @Transactional(readOnly = true)
     public long countActiveUsers() {
-        return userRepository.findAll().stream()
-                .filter(u -> u.getIsActive())
-                .count();
+        return userRepository.findAll().stream().filter(u -> u.getIsActive()).count();
     }
 }

@@ -23,28 +23,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class QuestionService {
-
     private final QuestionRepository questionRepository;
     private final SampleAnswerRepository sampleAnswerRepository;
     private final UserService userService;
 
     @Transactional(readOnly = true)
     public Page<QuestionResponse> getAllQuestions(Pageable pageable) {
-        return questionRepository.findAll(pageable)
-            .map(QuestionResponse::from);
+        return questionRepository.findAll(pageable).map(QuestionResponse::from);
     }
 
     @Transactional(readOnly = true)
     public QuestionResponse getQuestionById(Long id) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+        Question question = questionRepository.findById(id).orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
         return QuestionResponse.from(question);
     }
     
     @Transactional(readOnly = true)
     public Question getQuestionEntityById(Long id) {
-        return questionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+        return questionRepository.findById(id).orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
@@ -54,8 +50,7 @@ public class QuestionService {
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable) {
-        return questionRepository.findByCriteria(level, createdByUsername, fromDate, toDate, pageable)
-                .map(QuestionResponse::from);
+        return questionRepository.findByCriteria(level, createdByUsername, fromDate, toDate, pageable).map(QuestionResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -71,17 +66,14 @@ public class QuestionService {
         Question question = new Question();
         question.setContent(request.getContent());
         question.setLevel(request.getLevel());
-        
-        // Set createdBy from current authenticated user
+        // Đặt createdBy từ người dùng đã xác thực hiện tại
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             User createdBy = userService.getUserEntityByUsername(authentication.getName());
             question.setCreatedBy(createdBy);
         }
-        
         Question savedQuestion = questionRepository.save(question);
-        
-        // Create sample answers if provided
+        // Tạo các câu trả lời mẫu nếu được cung cấp
         if (request.getSampleAnswers() != null && !request.getSampleAnswers().isEmpty()) {
             for (CreateQuestionRequest.SampleAnswerDto sampleDto : request.getSampleAnswers()) {
                 SampleAnswer sampleAnswer = new SampleAnswer();
@@ -92,7 +84,6 @@ public class QuestionService {
             }
             log.info("Created {} sample answers for question {}", request.getSampleAnswers().size(), savedQuestion.getId());
         }
-        
         log.info("Creating new question: {}", question.getContent());
         return QuestionResponse.from(savedQuestion);
     }
@@ -100,14 +91,12 @@ public class QuestionService {
     @Transactional
     public QuestionResponse updateQuestion(Long id, UpdateQuestionRequest request) {
         Question question = getQuestionEntityById(id);
-        
         if (request.getContent() != null) {
             question.setContent(request.getContent());
         }
         if (request.getLevel() != null) {
             question.setLevel(request.getLevel());
         }
-        
         Question savedQuestion = questionRepository.save(question);
         log.info("Updated question with id: {}", id);
         return QuestionResponse.from(savedQuestion);
@@ -119,7 +108,7 @@ public class QuestionService {
         log.info("Hard deleted question with id: {}", id);
     }
     
-    // ============= Sample Answer CRUD Methods =============
+    // ============= Các phương thức CRUD cho Câu trả lời Mẫu =============
     
     @Transactional(readOnly = true)
     public List<SampleAnswerResponse> getSampleAnswers(Long questionId) {
@@ -132,23 +121,19 @@ public class QuestionService {
     public SampleAnswerResponse getSampleAnswerById(Long questionId, Long sampleAnswerId) {
         SampleAnswer sampleAnswer = sampleAnswerRepository.findById(sampleAnswerId)
                 .orElseThrow(() -> new RuntimeException("Sample answer not found with id: " + sampleAnswerId));
-        
         if (!sampleAnswer.getQuestion().getId().equals(questionId)) {
             throw new RuntimeException("Sample answer does not belong to question " + questionId);
         }
-        
         return SampleAnswerResponse.from(sampleAnswer);
     }
     
     @Transactional
     public SampleAnswerResponse createSampleAnswer(Long questionId, CreateSampleAnswerRequest request) {
         Question question = getQuestionEntityById(questionId);
-        
         SampleAnswer sampleAnswer = new SampleAnswer();
         sampleAnswer.setQuestion(question);
         sampleAnswer.setContent(request.getContent());
         sampleAnswer.setScore(request.getScore());
-        
         SampleAnswer saved = sampleAnswerRepository.save(sampleAnswer);
         log.info("Created sample answer for question {}", questionId);
         return SampleAnswerResponse.from(saved);
@@ -158,18 +143,15 @@ public class QuestionService {
     public SampleAnswerResponse updateSampleAnswer(Long questionId, Long sampleAnswerId, UpdateSampleAnswerRequest request) {
         SampleAnswer sampleAnswer = sampleAnswerRepository.findById(sampleAnswerId)
                 .orElseThrow(() -> new RuntimeException("Sample answer not found with id: " + sampleAnswerId));
-        
         if (!sampleAnswer.getQuestion().getId().equals(questionId)) {
             throw new RuntimeException("Sample answer does not belong to question " + questionId);
         }
-        
         if (request.getContent() != null) {
             sampleAnswer.setContent(request.getContent());
         }
         if (request.getScore() != null) {
             sampleAnswer.setScore(request.getScore());
         }
-        
         SampleAnswer saved = sampleAnswerRepository.save(sampleAnswer);
         log.info("Updated sample answer {} for question {}", sampleAnswerId, questionId);
         return SampleAnswerResponse.from(saved);
@@ -178,12 +160,10 @@ public class QuestionService {
     @Transactional
     public void deleteSampleAnswer(Long questionId, Long sampleAnswerId) {
         SampleAnswer sampleAnswer = sampleAnswerRepository.findById(sampleAnswerId)
-                .orElseThrow(() -> new RuntimeException("Sample answer not found with id: " + sampleAnswerId));
-        
+                .orElseThrow(() -> new RuntimeException("Sample answer not found with id: " + sampleAnswerId));        
         if (!sampleAnswer.getQuestion().getId().equals(questionId)) {
             throw new RuntimeException("Sample answer does not belong to question " + questionId);
         }
-        
         sampleAnswerRepository.deleteById(sampleAnswerId);
         log.info("Deleted sample answer {} from question {}", sampleAnswerId, questionId);
     }

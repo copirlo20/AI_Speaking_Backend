@@ -7,6 +7,5 @@ import java.util.List;
 
 @Repository
 public interface AIProcessingLogRepository extends JpaRepository<AIProcessingLog, Long> {
-    
     List<AIProcessingLog> findByTestAnswerId(Long testAnswerId);
 }

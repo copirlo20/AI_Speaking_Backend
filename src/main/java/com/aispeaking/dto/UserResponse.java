@@ -9,15 +9,14 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * DTO for User response - NEVER expose password field
- * Use this instead of User entity in all controller responses
+ * DTO cho phản hồi User - KHÔNG BAO GIỞ lộ trường mật khẩu
+ * Sử dụng DTO này thay vì entity User trong tất cả các phản hồi từ controller
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
-    
     private Long id;
     private String username;
     private String fullName;
@@ -27,9 +26,9 @@ public class UserResponse {
     private LocalDateTime updatedAt;
     
     /**
-     * Convert User entity to UserResponse DTO
-     * @param user User entity
-     * @return UserResponse DTO without password field
+     * Chuyển đổi entity User thành DTO UserResponse
+     * param user Entity User
+     * return DTO UserResponse không có trường mật khẩu
      */
     public static UserResponse from(User user) {
         return UserResponse.builder()

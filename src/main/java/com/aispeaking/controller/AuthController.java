@@ -25,13 +25,12 @@ import java.util.Map;
 @CrossOrigin(origins = "${cors.allowed.origins}")
 @Slf4j
 public class AuthController {
-
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
 
     /**
-     * Login endpoint với JWT
+     * Đăng nhập với JWT
      * POST /auth/login
      * 
      * Request body:
@@ -60,12 +59,9 @@ public class AuthController {
                             request.getPassword()
                     )
             );
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
-
             User user = userService.getUserEntityByUsername(request.getUsername());
-            
             LoginResponse response = new LoginResponse(
                 user.getId(),
                 user.getUsername(),
@@ -75,10 +71,8 @@ public class AuthController {
             );
             response.setToken(jwt);
             response.setMessage("Login successful");
-            
             log.info("User {} logged in successfully", request.getUsername());
             return ResponseEntity.ok(response);
-            
         } catch (Exception e) {
             log.warn("Login failed for username: {}", request.getUsername());
             Map<String, String> error = new HashMap<>();
@@ -88,7 +82,7 @@ public class AuthController {
     }
 
     /**
-     * Register new TEACHER account
+     * Đăng ký tài khoản giáo viên mới
      * POST /auth/register
      * 
      * Request body:
@@ -106,7 +100,6 @@ public class AuthController {
                 request.getPassword(),
                 request.getFullName()
             );
-            
             LoginResponse response = new LoginResponse(
                 user.getId(),
                 user.getUsername(),
@@ -115,9 +108,7 @@ public class AuthController {
                 user.getIsActive(),
                 "Registration successful"
             );
-            
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());
@@ -126,7 +117,7 @@ public class AuthController {
     }
 
     /**
-     * Check if username exists
+     * Kiểm tra tên đăng nhập đã tồn tại
      * GET /auth/check-username/{username}
      */
     @GetMapping("/check-username/{username}")

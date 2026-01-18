@@ -16,4 +16,5 @@ __pycache__/
 # Upload files
 uploads/
 audio/
+temp/
 *.wav

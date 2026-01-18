@@ -6,11 +6,10 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * DTO for adding questions to an exam
+ * DTO cho yêu cầu thêm câu hỏi vào đề thi
  */
 @Data
 public class AddQuestionsToExamRequest {
-    
     @NotNull(message = "Question IDs are required")
     @NotEmpty(message = "At least one question ID is required")
     private List<Long> questionIds;

@@ -13,7 +13,6 @@ import java.util.Date;
 @Component
 @Slf4j
 public class JwtTokenProvider {
-
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -29,7 +28,6 @@ public class JwtTokenProvider {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
-
         return Jwts.builder()
                 .subject(Long.toString(userPrincipal.getId()))
                 .claim("username", userPrincipal.getUsername())
@@ -46,16 +44,15 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-
         return Long.parseLong(claims.getSubject());
     }
 
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(authToken);
+            .verifyWith(getSigningKey())
+            .build()
+            .parseSignedClaims(authToken);
             return true;
         } catch (SecurityException ex) {
             log.error("Invalid JWT signature");

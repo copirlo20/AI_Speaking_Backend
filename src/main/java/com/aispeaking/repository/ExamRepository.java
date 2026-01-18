@@ -12,9 +12,7 @@ import java.time.LocalDateTime;
 
 @Repository
 public interface ExamRepository extends JpaRepository<Exam, Long> {
-    
     Page<Exam> findAll(Pageable pageable);
-    
     Page<Exam> findByStatus(ExamStatus status, Pageable pageable);
     
     @Query("""

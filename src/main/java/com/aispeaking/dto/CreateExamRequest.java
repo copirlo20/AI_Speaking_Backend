@@ -6,20 +6,17 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * DTO for creating a new exam
+ * DTO cho việc tạo đề thi mới
  */
 @Data
 public class CreateExamRequest {
-    
-    @NotBlank(message = "Exam name is required")
-    private String name;
-    
     private String description;
-    
     private Integer durationMinutes;
+    private ExamStatus status;
     
     @NotNull(message = "Total questions is required")
     private Integer totalQuestions;
     
-    private ExamStatus status;
+    @NotBlank(message = "Exam name is required")
+    private String name;
 }

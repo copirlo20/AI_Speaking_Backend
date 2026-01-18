@@ -14,11 +14,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${cors.allowed.origins}")
 public class StatisticsController {
-
     private final StatisticsService statisticsService;
 
     /**
-     * Get dashboard statistics
+     * Lấy thống kê tổng quan cho dashboard
      * GET /statistics/dashboard
      * 
      * Response JSON:
@@ -38,7 +37,7 @@ public class StatisticsController {
     }
 
     /**
-     * Get question statistics by level
+     * Lấy thống kê câu hỏi theo mức độ
      * GET /statistics/questions/by-level
      * 
      * Response JSON:
@@ -53,7 +52,7 @@ public class StatisticsController {
     }
 
     /**
-     * Get exam statistics by status
+     * Lấy thống kê kỳ thi theo trạng thái
      * GET /statistics/exams/by-status
      * 
      * Response JSON:
@@ -69,7 +68,7 @@ public class StatisticsController {
     }
 
     /**
-     * Get test session statistics by status
+     * Lấy thống kê phiên thi theo trạng thái
      * GET /statistics/test-sessions/by-status
      * 
      * Response JSON:
@@ -85,7 +84,7 @@ public class StatisticsController {
     }
 
     /**
-     * Get detailed statistics for a specific test session
+     * Lấy thống kê chi tiết cho một phiên thi cụ thể
      * GET /statistics/test-sessions/{id}
      * 
      * Response JSON:
@@ -105,7 +104,7 @@ public class StatisticsController {
     }
 
     /**
-     * Get detailed statistics for a specific exam
+     * Lấy thống kê chi tiết cho một kỳ thi cụ thể
      * GET /statistics/exams/{id}
      * 
      * Response JSON:
@@ -125,7 +124,7 @@ public class StatisticsController {
     }
 
     /**
-     * Get recent test sessions
+     * Lấy danh sách phiên thi gần đây
      * GET /statistics/test-sessions/recent?limit=10
      * 
      * Response JSON:
@@ -147,7 +146,7 @@ public class StatisticsController {
     }
 
     /**
-     * Get statistics by date range
+     * Lấy thống kê theo khoảng thời gian
      * GET /statistics/by-date-range?startDate=2026-01-01T00:00:00&endDate=2026-01-31T23:59:59
      * 
      * Response JSON:

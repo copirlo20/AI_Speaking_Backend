@@ -9,15 +9,14 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * DTO for Question response
- * Basic information without lazy-loaded relations
+ * DTO cho phản hồi Question
+ * Thông tin cơ bản không có các quan hệ lazy-loaded
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionResponse {
-    
     private Long id;
     private String content;
     private QuestionLevel level;
@@ -26,7 +25,7 @@ public class QuestionResponse {
     private LocalDateTime updatedAt;
     
     /**
-     * Convert Question entity to QuestionResponse DTO
+     * Chuyển đổi entity Question thành DTO QuestionResponse
      */
     public static QuestionResponse from(Question question) {
         return QuestionResponse.builder()

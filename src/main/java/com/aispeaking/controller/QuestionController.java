@@ -18,11 +18,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${cors.allowed.origins}")
 public class QuestionController {
-
     private final QuestionService questionService;
 
     /**
-     * Get all questions with pagination
+     * Lấy tất cả câu hỏi với phân trang
      * GET /questions?page=0&size=10&sort=id,desc
      * 
      * Response JSON (Page):
@@ -48,7 +47,7 @@ public class QuestionController {
     }
 
     /**
-     * Get question by ID
+     * Lấy câu hỏi theo ID
      * GET /questions/{id}
      * 
      * Response JSON:
@@ -67,7 +66,7 @@ public class QuestionController {
     }
 
     /**
-     * Search questions with filters
+     * Tìm kiếm câu hỏi với các bộ lọc
      * GET /questions/search?level=EASY&createdByUsername=admin
      * 
      * Response JSON: Same as getAllQuestions
@@ -83,7 +82,7 @@ public class QuestionController {
     }
 
     /**
-     * Get random questions
+     * Lấy câu hỏi ngẫu nhiên với số lượng và mức độ khó xác định
      * GET /questions/random?level=EASY&count=10
      * 
      * Response JSON: Array of QuestionResponse (same structure as single question)
@@ -96,7 +95,7 @@ public class QuestionController {
     }
 
     /**
-     * Create new question
+     * Tạo câu hỏi mới
      * POST /questions
      *
      * Request JSON:
@@ -124,7 +123,7 @@ public class QuestionController {
     }
 
     /**
-     * Update question
+     * Cập nhật câu hỏi
      * PUT /questions/{id}
      * 
      * Request JSON:
@@ -143,7 +142,7 @@ public class QuestionController {
     }
 
     /**
-     * Delete question
+     * Xóa câu hỏi
      * DELETE /questions/{id}
      * 
      * Response: 204 No Content
@@ -153,11 +152,11 @@ public class QuestionController {
         questionService.deleteQuestion(id);
         return ResponseEntity.noContent().build();
     }
-    
-    // ============= Sample Answer Endpoints =============
+
+    // ============= Các endpoint cho Câu trả lời Mẫu =============
     
     /**
-     * Get all sample answers for a question
+     * Lấy tất cả câu trả lời mẫu cho một câu hỏi
      * GET /questions/{questionId}/sample-answers
      * 
      * Response JSON:
@@ -177,7 +176,7 @@ public class QuestionController {
     }
     
     /**
-     * Get a specific sample answer
+     * Lấy câu trả lời mẫu theo ID
      * GET /questions/{questionId}/sample-answers/{sampleAnswerId}
      * 
      * Response JSON: Same as item in getSampleAnswers
@@ -190,7 +189,7 @@ public class QuestionController {
     }
     
     /**
-     * Create a new sample answer for a question
+     * Tạo câu trả lời mẫu mới cho một câu hỏi
      * POST /questions/{questionId}/sample-answers
      * 
      * Request JSON:
@@ -209,7 +208,7 @@ public class QuestionController {
     }
     
     /**
-     * Update a sample answer
+     * Cập nhật câu trả lời mẫu
      * PUT /questions/{questionId}/sample-answers/{sampleAnswerId}
      * 
      * Request JSON:
@@ -229,7 +228,7 @@ public class QuestionController {
     }
     
     /**
-     * Delete a sample answer
+     * Xóa câu trả lời mẫu
      * DELETE /questions/{questionId}/sample-answers/{sampleAnswerId}
      * 
      * Response: 204 No Content

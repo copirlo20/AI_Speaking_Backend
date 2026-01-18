@@ -9,15 +9,14 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * DTO for Exam response
- * Basic information without lazy-loaded relations
+ * DTO cho phản hồi Exam
+ * Thông tin cơ bản không có các quan hệ lazy-loaded
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExamResponse {
-    
     private Long id;
     private String name;
     private String description;
@@ -29,7 +28,7 @@ public class ExamResponse {
     private LocalDateTime updatedAt;
     
     /**
-     * Convert Exam entity to ExamResponse DTO
+     * Chuyển đổi entity Exam thành DTO ExamResponse
      */
     public static ExamResponse from(Exam exam) {
         return ExamResponse.builder()

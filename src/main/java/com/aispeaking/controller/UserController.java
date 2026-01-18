@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${cors.allowed.origins}")
 public class UserController {
-
     private final UserService userService;
 
     /**
@@ -46,7 +45,7 @@ public class UserController {
     }
 
     /**
-     * Get user by ID
+     * Lấy user theo ID
      * GET /users/{id}
      * 
      * Response JSON:
@@ -66,7 +65,7 @@ public class UserController {
     }
 
     /**
-     * Get user by username
+     * Lấy user theo username
      * GET /users/username/{username}
      * 
      * Response JSON: Same as getUserById
@@ -77,7 +76,7 @@ public class UserController {
     }
 
     /**
-     * Create user (admin only - can specify role)
+     * Tạo mới user
      * POST /users
      * 
      * Request JSON:
@@ -96,7 +95,7 @@ public class UserController {
     }
 
     /**
-     * Update user
+     * Cập nhật thông tin user
      * PUT /users/{id}
      * 
      * Request JSON:
@@ -116,7 +115,7 @@ public class UserController {
     }
 
     /**
-     * Change user password
+     * Thay đổi mật khẩu user
      * PUT /users/{id}/change-password
      * 
      * Request JSON:
@@ -135,7 +134,7 @@ public class UserController {
     }
 
     /**
-     * Toggle user active status
+     * Chuyển đổi trạng thái kích hoạt user
      * PUT /users/{id}/toggle-status
      * 
      * Response: 200 OK (empty body)
@@ -147,7 +146,7 @@ public class UserController {
     }
 
     /**
-     * Delete user
+     * Xóa user
      * DELETE /users/{id}
      * 
      * Response: 204 No Content
@@ -159,7 +158,7 @@ public class UserController {
     }
 
     /**
-     * Count active users
+     * Đếm số user đang hoạt động
      * GET /users/count/active
      * 
      * Response JSON:

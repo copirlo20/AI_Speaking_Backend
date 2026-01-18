@@ -4,11 +4,10 @@ import com.aispeaking.entity.enums.QuestionLevel;
 import lombok.Data;
 
 /**
- * DTO for updating a question
+ * DTO cho việc cập nhật câu hỏi
  */
 @Data
 public class UpdateQuestionRequest {
-    
     private String content;
     private QuestionLevel level;
 }

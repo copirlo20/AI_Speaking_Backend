@@ -21,14 +21,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${cors.allowed.origins}")
 public class AdminController {
-
     private final QuestionService questionService;
     private final ExamService examService;
     private final TestSessionRepository testSessionRepository;
     private final ExamRepository examRepository;
 
     /**
-     * Bulk delete questions
+     * Xóa hàng loạt câu hỏi
      * POST /admin/questions/bulk-delete
      * 
      * Request JSON:
@@ -47,17 +46,15 @@ public class AdminController {
             @RequestBody Map<String, Object> request) {
         @SuppressWarnings("unchecked")
         var questionIds = (java.util.List<Integer>) request.get("questionIds");
-        
         int deleted = 0;
         for (Integer id : questionIds) {
             try {
                 questionService.deleteQuestion(id.longValue());
                 deleted++;
             } catch (Exception e) {
-                // Continue with next
+                // Tiếp tục với item tiếp theo
             }
         }
-        
         return ResponseEntity.ok(Map.of(
             "requested", questionIds.size(),
             "deleted", deleted
@@ -65,7 +62,7 @@ public class AdminController {
     }
 
     /**
-     * Bulk update exam status
+     * Cập nhật trạng thái hàng loạt đề thi
      * PUT /admin/exams/bulk-update-status
      * 
      * Request JSON:
@@ -87,7 +84,6 @@ public class AdminController {
         var examIds = (java.util.List<Integer>) request.get("examIds");
         String statusStr = request.get("status").toString();
         ExamStatus status = ExamStatus.valueOf(statusStr);
-        
         int updated = 0;
         for (Integer id : examIds) {
             try {
@@ -96,10 +92,9 @@ public class AdminController {
                 examRepository.save(exam);
                 updated++;
             } catch (Exception e) {
-                // Continue with next
+                // Tiếp tục với item tiếp theo
             }
         }
-        
         return ResponseEntity.ok(Map.of(
             "requested", examIds.size(),
             "updated", updated
@@ -107,7 +102,7 @@ public class AdminController {
     }
 
     /**
-     * Get all test sessions with filtering
+     * Lấy tất cả phiên kiểm tra với bộ lọc
      * GET /admin/test-sessions?status=COMPLETED&examId=1&page=0&size=10
      * 
      * Response JSON (Page):
@@ -136,9 +131,7 @@ public class AdminController {
             @RequestParam(required = false) TestSessionStatus status,
             @RequestParam(required = false) Long examId,
             Pageable pageable) {
-        
         Page<TestSession> sessions;
-        
         if (status != null) {
             sessions = testSessionRepository.findByStatus(status, pageable);
         } else if (examId != null) {
@@ -146,45 +139,33 @@ public class AdminController {
         } else {
             sessions = testSessionRepository.findAll(pageable);
         }
-        
         return ResponseEntity.ok(sessions.map(TestSessionResponse::from));
     }
 
     /**
-     * Cancel a test session
+     * Hủy một phiên kiểm tra
      * PUT /admin/test-sessions/{id}/cancel
-     * 
-     * No request body required
      * 
      * Response: 200 OK (empty body)
      */
     @PutMapping("/test-sessions/{id}/cancel")
     public ResponseEntity<Void> cancelTestSession(@PathVariable Long id) {
-        TestSession session = testSessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Test session not found"));
-        
+        TestSession session = testSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Test session not found"));
         session.setStatus(TestSessionStatus.CANCELLED);
         testSessionRepository.save(session);
-        
         return ResponseEntity.ok().build();
     }
 
     /**
-     * Delete test session (soft delete)
+     * Xóa một phiên kiểm tra
      * DELETE /admin/test-sessions/{id}
-     * 
-     * No request body required
      * 
      * Response: 204 No Content
      */
     @DeleteMapping("/test-sessions/{id}")
     public ResponseEntity<Void> deleteTestSession(@PathVariable Long id) {
-        TestSession session = testSessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Test session not found"));
-        
-        // You can implement soft delete in TestSession entity if needed
+        TestSession session = testSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Test session not found"));
         testSessionRepository.delete(session);
-        
         return ResponseEntity.noContent().build();
     }
 
@@ -203,24 +184,21 @@ public class AdminController {
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> getSystemHealth() {
         Map<String, Object> health = new HashMap<>();
-        
         try {
-            // Check database
+            // Kiểm tra cơ sở dữ liệu
             long questionCount = questionService.getAllQuestions(Pageable.unpaged()).getTotalElements();
             health.put("database", "OK");
             health.put("questionCount", questionCount);
         } catch (Exception e) {
             health.put("database", "ERROR: " + e.getMessage());
         }
-        
         health.put("timestamp", java.time.LocalDateTime.now());
         health.put("status", "RUNNING");
-        
         return ResponseEntity.ok(health);
     }
 
     /**
-     * Get system configuration
+     * Lấy cấu hình hệ thống
      * GET /admin/config
      * 
      * Response JSON:
@@ -234,12 +212,10 @@ public class AdminController {
     @GetMapping("/config")
     public ResponseEntity<Map<String, Object>> getSystemConfig() {
         Map<String, Object> config = new HashMap<>();
-        
         config.put("maxFileSize", "50MB");
         config.put("allowedAudioFormats", new String[]{"wav", "mp3", "m4a"});
         config.put("aiWhisperUrl", "http://localhost:5000");
         config.put("aiQwenUrl", "http://localhost:5001");
-        
         return ResponseEntity.ok(config);
     }
 }

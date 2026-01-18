@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class ExamQuestion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,7 +35,7 @@ public class ExamQuestion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
-    @JsonIgnore  // Must ignore to prevent lazy loading exception
+    @JsonIgnore  // Phải bỏ qua để ngăn chặn exception lazy loading
     private Question question;
 
     @Column(name = "question_order", nullable = false)

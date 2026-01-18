@@ -21,7 +21,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Question extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,6 +38,6 @@ public class Question extends BaseEntity {
     private User createdBy;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore  // Completely ignore this collection to prevent lazy loading issues
+    @JsonIgnore  // Bỏ qua hoàn toàn collection này để ngăn chặn các vấn đề về lazy loading
     private List<SampleAnswer> sampleAnswers = new ArrayList<>();
 }

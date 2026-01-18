@@ -18,11 +18,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${cors.allowed.origins}")
 public class ExamController {
-
     private final ExamService examService;
 
     /**
-     * Get all exams with pagination
+     * Lấy tất cả đề thi với phân trang
      * GET /exams?page=0&size=10&sort=id,desc
      * 
      * Response JSON (Page):
@@ -50,7 +49,7 @@ public class ExamController {
     }
 
     /**
-     * Search exams with filters
+     * Tìm kiếm đề thi với các tiêu chí khác nhau
      * GET /exams/search?status=ACTIVE&createdByUsername=johndoe&fromDate=2026-01-01T00:00:00
      * 
      * Response JSON: Same as getAllExams
@@ -66,7 +65,7 @@ public class ExamController {
     }
 
     /**
-     * Get exam by ID
+     * Lấy đề thi theo ID
      * GET /exams/{id}
      * 
      * Response JSON:
@@ -87,7 +86,7 @@ public class ExamController {
     }
 
     /**
-     * Create new exam
+     * Tạo đề thi mới
      * POST /exams
      * 
      * Request JSON:
@@ -105,7 +104,7 @@ public class ExamController {
     }
 
     /**
-     * Update exam
+     * Cập nhật đề thi
      * PUT /exams/{id}
      * 
      * Request JSON:
@@ -125,7 +124,7 @@ public class ExamController {
     }
 
     /**
-     * Delete exam
+     * Xóa đề thi
      * DELETE /exams/{id}
      * 
      * Response: 204 No Content
@@ -137,7 +136,7 @@ public class ExamController {
     }
 
     /**
-     * Add questions to exam
+     * Thêm câu hỏi vào đề thi
      * POST /exams/{id}/questions
      * 
      * Request JSON:
@@ -156,7 +155,7 @@ public class ExamController {
     }
 
     /**
-     * Generate random exam questions
+     * Tự động tạo đề thi với câu hỏi ngẫu nhiên
      * POST /exams/{id}/generate-random
      * 
      * Request JSON:
@@ -176,7 +175,7 @@ public class ExamController {
     }
 
     /**
-     * Get all questions in an exam
+     * Lấy tất cả câu hỏi trong đề thi
      * GET /exams/{id}/questions
      * 
      * Response JSON:

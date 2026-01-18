@@ -24,7 +24,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestSession extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

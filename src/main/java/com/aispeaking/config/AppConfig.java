@@ -11,7 +11,6 @@ import java.util.concurrent.Executor;
 @Configuration
 @EnableAsync
 public class AppConfig {
-
     @Value("${ai.whisper.url}")
     private String whisperUrl;
 

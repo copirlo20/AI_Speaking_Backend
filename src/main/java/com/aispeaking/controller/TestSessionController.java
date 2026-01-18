@@ -20,11 +20,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${cors.allowed.origins}")
 public class TestSessionController {
-
     private final TestSessionService testSessionService;
 
     /**
-     * Get all test sessions with pagination
+     * Lấy tất cả phiên thi với phân trang
      * GET /test-sessions?page=0&size=10&sort=id,desc
      * 
      * Response JSON: Same as AdminController getAllTestSessions
@@ -35,7 +34,7 @@ public class TestSessionController {
     }
 
     /**
-     * Search test sessions with filters
+     * Tìm kiếm phiên thi với các tham số tùy chọn
      * GET /test-sessions/search?examId=1&studentName=Nguyen&status=COMPLETED
      * 
      * Response JSON: Same as getAllTestSessions
@@ -48,14 +47,12 @@ public class TestSessionController {
             @RequestParam(required = false) BigDecimal minScore,
             @RequestParam(required = false) BigDecimal maxScore,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
-            Pageable pageable) {
-        return ResponseEntity.ok(testSessionService.searchTestSessions(
-                examId, studentName, status, minScore, maxScore, fromDate, toDate, pageable));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate, Pageable pageable) {
+        return ResponseEntity.ok(testSessionService.searchTestSessions(examId, studentName, status, minScore, maxScore, fromDate, toDate, pageable));
     }
 
     /**
-     * Create new test session
+     * Tạo mới phiên thi
      * POST /test-sessions
      * 
      * Request JSON:
@@ -84,12 +81,11 @@ public class TestSessionController {
                 request.getExamId(), 
                 request.getStudentName(), 
                 request.getStudentOrganization());
-        
         return ResponseEntity.ok(testSession);
     }
 
     /**
-     * Get test session by ID
+     * Lấy phiên thi theo ID
      * GET /test-sessions/{id}
      * 
      * Response JSON: Same as createTestSession
@@ -100,7 +96,7 @@ public class TestSessionController {
     }
 
     /**
-     * Get all answers for a test session
+     * Lấy danh sách câu trả lời trong phiên thi
      * GET /test-sessions/{id}/answers
      * 
      * Response JSON:
@@ -124,7 +120,7 @@ public class TestSessionController {
     }
 
     /**
-     * Submit answer with audio file
+     * Nộp câu trả lời cho một câu hỏi trong phiên thi
      * POST /test-sessions/{id}/submit-answer
      * 
      * Form Data:
@@ -147,7 +143,7 @@ public class TestSessionController {
     }
 
     /**
-     * Complete test session
+     * Hoàn thành phiên thi
      * POST /test-sessions/{id}/complete
      * 
      * Response: 200 OK (empty body)

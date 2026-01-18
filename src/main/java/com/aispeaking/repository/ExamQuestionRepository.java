@@ -7,8 +7,6 @@ import java.util.List;
 
 @Repository
 public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, Long> {
-    
     List<ExamQuestion> findByExamIdOrderByQuestionOrder(Long examId);
-    
     void deleteByExamId(Long examId);
 }

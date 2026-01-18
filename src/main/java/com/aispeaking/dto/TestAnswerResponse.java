@@ -10,14 +10,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * DTO for TestAnswer response
+ * DTO cho phản hồi TestAnswer
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestAnswerResponse {
-    
     private Long id;
     private Long testSessionId;
     private Long questionId;
@@ -31,7 +30,7 @@ public class TestAnswerResponse {
     private LocalDateTime createdAt;
     
     /**
-     * Convert TestAnswer entity to TestAnswerResponse DTO
+     * Chuyển đổi entity TestAnswer thành DTO TestAnswerResponse
      */
     public static TestAnswerResponse from(TestAnswer testAnswer) {
         return TestAnswerResponse.builder()

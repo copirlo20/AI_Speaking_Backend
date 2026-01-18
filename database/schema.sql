@@ -1,7 +1,7 @@
--- AI Speaking Test Database Schema
--- Optimized for Spring Boot with JPA
+-- Cơ sở dữ liệu cho ứng dụng AI Speaking
+-- Tối ưu hóa với Spring Data JPA và MySQL
 
--- User Management
+-- Quản trị người dùng
 CREATE TABLE users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE users (
     INDEX idx_role (role)
 );
 
--- Questions Bank
+-- Ngân hàng câu hỏi
 CREATE TABLE questions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     content TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE questions (
     INDEX idx_created_at (created_at)
 );
 
--- Sample Answers for Questions
+-- Mẫu câu trả lời cho câu hỏi
 CREATE TABLE sample_answers (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     question_id BIGINT NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE sample_answers (
     INDEX idx_question_id (question_id)
 );
 
--- Exam Templates
+-- Đề thi
 CREATE TABLE exams (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(200) NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE exams (
     INDEX idx_created_at (created_at)
 );
 
--- Exam Question Relations (Many-to-Many)
+-- Câu hỏi trong đề thi
 CREATE TABLE exam_questions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     exam_id BIGINT NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE exam_questions (
     INDEX idx_question_id (question_id)
 );
 
--- Test Sessions (Student Test Attempts)
+-- Phiên thi
 CREATE TABLE test_sessions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     exam_id BIGINT NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE test_sessions (
     INDEX idx_started_at (started_at)
 );
 
--- Test Session Answers
+-- Câu trả lời trong phiên thi
 CREATE TABLE test_answers (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     test_session_id BIGINT NOT NULL,
@@ -112,7 +112,7 @@ CREATE TABLE test_answers (
     INDEX idx_processing_status (processing_status)
 );
 
--- AI Processing Logs (for debugging and monitoring)
+-- Nhật ký xử lý AI
 CREATE TABLE ai_processing_logs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     test_answer_id BIGINT NOT NULL,
@@ -127,7 +127,3 @@ CREATE TABLE ai_processing_logs (
     INDEX idx_service_type (service_type),
     INDEX idx_created_at (created_at)
 );
-
--- Insert default admin user (password: admin123, should be changed)
--- INSERT INTO users (username, password, full_name, role) VALUES 
--- ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'System Admin', 'ADMIN');

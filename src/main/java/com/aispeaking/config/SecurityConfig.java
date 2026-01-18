@@ -23,7 +23,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     
@@ -55,28 +54,24 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 // ============================================
-                // PUBLIC ENDPOINTS (No authentication required)
+                // CÁC ENDPOINT CÔNG KHAI (Không cần xác thực)
                 // ============================================
-                // Auth endpoints
+                // Các endpoint xác thực
                 .requestMatchers("/auth/login", "/auth/register", "/auth/check-username/**").permitAll()
-                
-                // Test Session - Student actions (no login required)
-                .requestMatchers(HttpMethod.POST, "/test-sessions").permitAll() // Student starts test
-                .requestMatchers(HttpMethod.GET, "/test-sessions/{id}").permitAll() // Student views their session
-                .requestMatchers(HttpMethod.GET, "/test-sessions/{id}/answers").permitAll() // Student views their answers
-                .requestMatchers(HttpMethod.POST, "/test-sessions/{id}/submit-answer").permitAll() // Student submits answer
-                .requestMatchers(HttpMethod.POST, "/test-sessions/{id}/complete").permitAll() // Student completes test
-                
+                // Phiên kiểm tra - Hành động của sinh viên (không cần đăng nhập)
+                .requestMatchers(HttpMethod.POST, "/test-sessions").permitAll() // Sinh viên bắt đầu kiểm tra
+                .requestMatchers(HttpMethod.GET, "/test-sessions/{id}").permitAll() // Sinh viên xem phiên của họ
+                .requestMatchers(HttpMethod.GET, "/test-sessions/{id}/answers").permitAll() // Sinh viên xem câu trả lời của họ
+                .requestMatchers(HttpMethod.POST, "/test-sessions/{id}/submit-answer").permitAll() // Sinh viên nộp câu trả lời
+                .requestMatchers(HttpMethod.POST, "/test-sessions/{id}/complete").permitAll() // Sinh viên hoàn thành kiểm tra
                 // ============================================
-                // ADMIN ONLY - Full access
+                // Quản lý Hệ thống - chỉ ADMIN
                 // ============================================
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                
-                // User Management - ADMIN only
+                // Quản lý Người dùng - chỉ ADMIN
                 .requestMatchers("/users/**").hasRole("ADMIN")
-                
                 // ============================================
-                // TEACHER + ADMIN - Question Bank Management
+                // TEACHER + ADMIN - Quản lý Ngân hàng Câu hỏi
                 // ============================================
                 .requestMatchers(HttpMethod.GET, "/questions").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/questions/{id}").hasAnyRole("TEACHER", "ADMIN")
@@ -85,16 +80,14 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/questions").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/questions/{id}").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/questions/{id}").hasAnyRole("TEACHER", "ADMIN")
-                
-                // Sample Answers Management (nested under questions)
+                // Quản lý Câu trả lời Mẫu (lồng trong questions)
                 .requestMatchers(HttpMethod.GET, "/questions/{questionId}/sample-answers").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/questions/{questionId}/sample-answers/{id}").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/questions/{questionId}/sample-answers").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/questions/{questionId}/sample-answers/{id}").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/questions/{questionId}/sample-answers/{id}").hasAnyRole("TEACHER", "ADMIN")
-                
                 // ============================================
-                // TEACHER + ADMIN - Exam Management
+                // TEACHER + ADMIN - Quản lý Đề thi
                 // ============================================
                 .requestMatchers(HttpMethod.GET, "/exams").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/exams/search").hasAnyRole("TEACHER", "ADMIN")
@@ -105,28 +98,24 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/exams/{id}/generate-random").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/exams/{id}").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/exams/{id}").hasAnyRole("TEACHER", "ADMIN")
-                
                 // ============================================
-                // TEACHER + ADMIN - Test Session Viewing & Management
+                // TEACHER + ADMIN - Xem và Quản lý Phiên kiểm tra
                 // ============================================
                 .requestMatchers(HttpMethod.GET, "/test-sessions").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/test-sessions/search").hasAnyRole("TEACHER", "ADMIN")
-                // Note: GET /test-sessions/{id} and /test-sessions/{id}/answers are public (above)
-                
+                // Lưu ý: GET /test-sessions/{id} và /test-sessions/{id}/answers là công khai (ở trên)
                 // ============================================
                 // TEACHER + ADMIN - Statistics & Reports
                 // ============================================
                 .requestMatchers("/statistics/**").hasAnyRole("TEACHER", "ADMIN")
                 .requestMatchers("/reports/**").hasAnyRole("TEACHER", "ADMIN")
-                
                 // ============================================
-                // Default: All other requests require authentication
+                // Mặc định: Tất cả các yêu cầu khác yêu cầu xác thực
                 // ============================================
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
         return http.build();
     }
 }

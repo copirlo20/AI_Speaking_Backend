@@ -6,11 +6,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * DTO for generating random exam questions
+ * DTO cho việc tạo các câu hỏi thi ngẫu nhiên
  */
 @Data
 public class GenerateRandomExamRequest {
-    
     private QuestionLevel level;
     
     @NotNull(message = "Question count is required")

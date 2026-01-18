@@ -7,6 +7,5 @@ import java.util.List;
 
 @Repository
 public interface TestAnswerRepository extends JpaRepository<TestAnswer, Long> {
-    
     List<TestAnswer> findByTestSessionId(Long testSessionId);
 }

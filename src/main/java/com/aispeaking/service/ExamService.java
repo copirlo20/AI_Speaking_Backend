@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ExamService {
-
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final QuestionService questionService;
@@ -33,8 +32,7 @@ public class ExamService {
 
     @Transactional(readOnly = true)
     public Page<ExamResponse> getAllExams(Pageable pageable) {
-        return examRepository.findAll(pageable)
-            .map(ExamResponse::from);
+        return examRepository.findAll(pageable).map(ExamResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -44,21 +42,18 @@ public class ExamService {
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable) {
-        return examRepository.findByCriteria(status, createdByUsername, fromDate, toDate, pageable)
-                .map(ExamResponse::from);
+        return examRepository.findByCriteria(status, createdByUsername, fromDate, toDate, pageable).map(ExamResponse::from);
     }
 
     @Transactional(readOnly = true)
     public ExamResponse getExamById(Long id) {
-        Exam exam = examRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        Exam exam = examRepository.findById(id).orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
         return ExamResponse.from(exam);
     }
     
     @Transactional(readOnly = true)
     public Exam getExamEntityById(Long id) {
-        return examRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        return examRepository.findById(id).orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
     }
 
     @Transactional
@@ -68,15 +63,13 @@ public class ExamService {
         exam.setDescription(request.getDescription());
         exam.setDurationMinutes(request.getDurationMinutes());
         exam.setTotalQuestions(request.getTotalQuestions());
-        exam.setStatus(request.getStatus() != null ? request.getStatus() : ExamStatus.DRAFT);
-        
-        // Set createdBy from current authenticated user
+        exam.setStatus(request.getStatus() != null ? request.getStatus() : ExamStatus.DRAFT);   
+        // Đặt createdBy từ người dùng đã xác thực hiện tại
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             User createdBy = userService.getUserEntityByUsername(authentication.getName());
             exam.setCreatedBy(createdBy);
         }
-        
         Exam savedExam = examRepository.save(exam);
         log.info("Creating new exam: {}", exam.getName());
         return ExamResponse.from(savedExam);
@@ -85,7 +78,6 @@ public class ExamService {
     @Transactional
     public ExamResponse updateExam(Long id, UpdateExamRequest request) {
         Exam exam = getExamEntityById(id);
-        
         if (request.getName() != null) {
             exam.setName(request.getName());
         }
@@ -101,7 +93,6 @@ public class ExamService {
         if (request.getStatus() != null) {
             exam.setStatus(request.getStatus());
         }
-        
         Exam savedExam = examRepository.save(exam);
         log.info("Updated exam with id: {}", id);
         return ExamResponse.from(savedExam);
@@ -116,19 +107,15 @@ public class ExamService {
     @Transactional
     public void addQuestionsToExam(Long examId, List<Long> questionIds) {
         Exam exam = getExamEntityById(examId);
-        
         int order = 1;
         for (Long questionId : questionIds) {
             Question question = questionService.getQuestionEntityById(questionId);
-            
             ExamQuestion examQuestion = new ExamQuestion();
             examQuestion.setExam(exam);
             examQuestion.setQuestion(question);
             examQuestion.setQuestionOrder(order++);
-            
             examQuestionRepository.save(examQuestion);
         }
-        
         exam.setTotalQuestions(questionIds.size());
         examRepository.save(exam);
         log.info("Added {} questions to exam {}", questionIds.size(), examId);
@@ -137,26 +124,21 @@ public class ExamService {
     @Transactional
     public void generateRandomExam(Long examId, QuestionLevel level, int count) {
         Exam exam = getExamEntityById(examId);
-        
-        // Clear existing questions
+        // Xóa các câu hỏi hiện tại
         examQuestionRepository.deleteByExamId(examId);
-        
-        // Get random questions - need entity not DTO
+        // Lấy các câu hỏi ngẫu nhiên - cần entity không phải DTO
         List<Question> randomQuestions = questionService.getRandomQuestions(level, count)
                 .stream()
                 .map(dto -> questionService.getQuestionEntityById(dto.getId()))
                 .collect(Collectors.toList());
-        
         int order = 1;
         for (Question question : randomQuestions) {
             ExamQuestion examQuestion = new ExamQuestion();
             examQuestion.setExam(exam);
             examQuestion.setQuestion(question);
             examQuestion.setQuestionOrder(order++);
-            
             examQuestionRepository.save(examQuestion);
         }
-        
         exam.setTotalQuestions(randomQuestions.size());
         examRepository.save(exam);
         log.info("Generated random exam {} with {} questions", examId, randomQuestions.size());

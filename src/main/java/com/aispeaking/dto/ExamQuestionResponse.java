@@ -8,14 +8,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * DTO for ExamQuestion response
+ * DTO cho phản hồi ExamQuestion
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExamQuestionResponse {
-    
     private Long id;
     private Long examId;
     private Long questionId;
@@ -24,7 +23,7 @@ public class ExamQuestionResponse {
     private LocalDateTime createdAt;
     
     /**
-     * Convert ExamQuestion entity to ExamQuestionResponse DTO
+     * Chuyển đổi entity ExamQuestion thành DTO ExamQuestionResponse
      */
     public static ExamQuestionResponse from(ExamQuestion examQuestion) {
         return ExamQuestionResponse.builder()

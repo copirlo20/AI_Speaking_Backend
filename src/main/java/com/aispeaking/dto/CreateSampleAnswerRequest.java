@@ -6,11 +6,10 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * DTO for creating a new sample answer
+ * DTO cho việc tạo câu trả lời mẫu mới
  */
 @Data
 public class CreateSampleAnswerRequest {
-    
     @NotBlank(message = "Sample answer content is required")
     private String content;
     
