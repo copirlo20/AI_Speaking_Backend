@@ -1,18 +1,19 @@
 """
 Whisper Server - API chuyển giọng nói thành văn bản (Speech-to-Text)
-Sử dụng mô hình Whisper của OpenAI để chuyển đổi file âm thanh thành văn bản
+Sử dụng openai-whisper để chuyển đổi file âm thanh thành văn bản
+trực tiếp từ file medium.pt local, không cần tải từ Internet
 """
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import whisper
+import torch
 import base64
 import os
+import io
 import logging
 import uuid
 from pathlib import Path
-import soundfile as sf
-import numpy as np
 
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO)
@@ -26,10 +27,28 @@ CORS(app)
 TEMP_DIR = Path('temp')
 TEMP_DIR.mkdir(exist_ok=True)
 
-# Load mô hình Whisper
-logger.info("Whisper load model...")
-model = whisper.load_model("medium", download_root=".")
-logger.info("Whisper model loaded successfully!")
+# Auto-detect thiết bị
+if torch.cuda.is_available():
+    DEVICE = "cuda"
+    FP16 = True  # GPU: dùng fp16 cho tốc độ tối đa
+    logger.info(f"GPU detected: {torch.cuda.get_device_name(0)}")
+else:
+    DEVICE = "cpu"
+    FP16 = False  # CPU: không hỗ trợ fp16
+    logger.info("No GPU detected, using CPU")
+
+# === Load model LOCAL từ medium.pt ===
+PT_MODEL_PATH = Path('medium.pt')  # File model gốc OpenAI Whisper
+
+if not PT_MODEL_PATH.exists():
+    raise FileNotFoundError(
+        f"{PT_MODEL_PATH} not found! "
+        "Hãy đặt file medium.pt vào thư mục cùng cấp với whisper_server.py."
+    )
+
+logger.info(f"Loading model from {PT_MODEL_PATH} (device={DEVICE})...")
+model = whisper.load_model(str(PT_MODEL_PATH), device=DEVICE)
+logger.info(f"Model loaded successfully from LOCAL: {PT_MODEL_PATH}")
 
 """
 Endpoint kiểm tra trạng thái server
@@ -86,71 +105,57 @@ Response (Error - 400/500):
 def transcribe_audio():
     temp_audio_path = None
     try:
-        # Tạo tên file unique cho mỗi request để xử lý đồng thời nhiều request
-        unique_id = str(uuid.uuid4())
-        temp_audio_path = TEMP_DIR / f'audio_{unique_id}.wav'
         data = request.get_json(silent=True)
+        temp_audio_path = TEMP_DIR / f"{uuid.uuid4()}.wav"
+
+        # Xử lý audio input → lưu vào file tạm
         if data and 'audio_data' in data:
             audio_data = data['audio_data']
             if isinstance(audio_data, str):
                 audio_bytes = base64.b64decode(audio_data)
             else:
                 audio_bytes = audio_data
-            # Ghi audio vào file tạm thời unique
-            with open(str(temp_audio_path), 'wb') as f:
-                f.write(audio_bytes)
+            temp_audio_path.write_bytes(audio_bytes)
         elif 'audio' in request.files:
             audio_file = request.files['audio']
-            # Lưu file audio vào file tạm thời unique
             audio_file.save(str(temp_audio_path))
         else:
             return jsonify({'error': 'No audio data provided'}), 400
-        logger.info(f"Processing audio file: {temp_audio_path}")
-        if not os.path.exists(str(temp_audio_path)):
-            raise FileNotFoundError(str(temp_audio_path))
-        # Lấy đường dẫn tuyệt đối
-        abs_path = os.path.abspath(str(temp_audio_path))
-        # Kiểm tra kích thước file
-        file_size = os.path.getsize(abs_path)
-        logger.info(f"Audio file size: {file_size} bytes")
-        logger.info(f"Absolute path: {abs_path}")
-        if file_size == 0:
-            raise ValueError("Audio file is empty")
-        # Thử chuyển đổi audio sang text
-        try:
-            # Load audio bằng soundfile
-            audio_data, sample_rate = sf.read(abs_path)
-            # Chuyển sang mono nếu là stereo
-            if len(audio_data.shape) > 1:
-                audio_data = np.mean(audio_data, axis=1)
-            # Đảm bảo định dạng float32
-            audio_data = audio_data.astype(np.float32)
-            logger.info(f"Audio loaded: sample_rate={sample_rate}, duration={len(audio_data)/sample_rate:.2f}s")
-            # Chuyển đổi sang text (fp16=False để tương thích CPU)
-            result = model.transcribe(audio_data, language='en', fp16=False)
-        except Exception as transcribe_error:
-            logger.error(f"Transcription failed: {type(transcribe_error).__name__}: {str(transcribe_error)}")
-            raise
-        # Xóa file tạm thời sau khi xử lý xong
-        try:
-            os.unlink(str(temp_audio_path))
-            logger.info(f"Cleaned up temp file: {temp_audio_path}")
-        except Exception as cleanup_error:
-            logger.warning(f"Failed to cleanup temp file: {cleanup_error}")
+
+        # Transcribe bằng openai-whisper — cân bằng tốc độ + accuracy
+        result = model.transcribe(
+            str(temp_audio_path),
+            language='en',
+            fp16=FP16,
+            beam_size=5,                          # Beam search cho accuracy cao hơn
+            best_of=3,                            # Chọn kết quả tốt nhất từ 3 candidates
+            patience=1.5,                         # Beam search patience — tìm kỹ hơn
+            temperature=(0.0, 0.2, 0.4, 0.6, 0.8, 1.0),  # Fallback temperatures
+            compression_ratio_threshold=2.4,      # Lọc segment bị lặp/rác
+            logprob_threshold=-1.0,               # Lọc segment confidence thấp
+            no_speech_threshold=0.6,              # Phát hiện im lặng chính xác hơn
+            condition_on_previous_text=True,       # Dùng context trước để decode tốt hơn
+        )
+
+        full_text = result['text'].strip()
+        segments = result.get('segments', [])
+        language = result.get('language', 'en')
+
+        logger.info(f"Transcription done: {len(segments)} segments, lang={language}")
+
         return jsonify({
-            'transcribedText': result['text'].strip(),
-            'language': result.get('language', 'en'),
-            'segments': len(result.get('segments', []))
+            'transcribedText': full_text,
+            'language': language,
+            'segments': len(segments)
         }), 200
+
     except Exception as e:
         logger.error(f"Error during transcription: {str(e)}")
-        # Xóa file tạm thời nếu có lỗi
-        if temp_audio_path and os.path.exists(str(temp_audio_path)):
-            try:
-                os.unlink(str(temp_audio_path))
-            except:
-                pass
         return jsonify({'error': str(e)}), 500
+    finally:
+        # Xóa file tạm
+        if temp_audio_path and temp_audio_path.exists():
+            temp_audio_path.unlink(missing_ok=True)
 
 """
 Endpoint chuyển đổi file audio thành text (có thông tin chi tiết hơn)
@@ -191,57 +196,73 @@ def transcribe_file():
     try:
         if 'audio' not in request.files:
             return jsonify({'error': 'No audio file provided'}), 400
+
         audio_file = request.files['audio']
         language = request.form.get('language', None)
-        # Tạo tên file unique cho request này
-        unique_id = str(uuid.uuid4())
-        temp_audio_path = TEMP_DIR / f'audio_{unique_id}.wav'
-        # Lưu vào file tạm thời unique
+
+        logger.info(f"Processing audio file: {audio_file.filename}")
+
+        # Lưu file tạm
+        temp_audio_path = TEMP_DIR / f"{uuid.uuid4()}.wav"
         audio_file.save(str(temp_audio_path))
-        logger.info(f"Processing audio file: {audio_file.filename} (ID: {unique_id})")
-        # Chuyển đổi bằng Whisper
+
+        # Transcribe bằng openai-whisper — cân bằng tốc độ + accuracy
+        transcribe_params = dict(
+            fp16=FP16,
+            beam_size=5,
+            best_of=3,
+            patience=1.5,
+            temperature=(0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
+            compression_ratio_threshold=2.4,
+            logprob_threshold=-1.0,
+            no_speech_threshold=0.6,
+            condition_on_previous_text=True,
+        )
         if language:
-            result = model.transcribe(str(temp_audio_path), language=language)
-        else:
-            result = model.transcribe(str(temp_audio_path))
-        # Xóa file tạm thời
-        try:
-            os.unlink(str(temp_audio_path))
-            logger.info(f"Cleaned up temp file: {temp_audio_path}")
-        except Exception as cleanup_error:
-            logger.warning(f"Failed to cleanup temp file: {cleanup_error}")
-        response = {
-            'text': result['text'].strip(),
-            'language': result.get('language', 'unknown'),
-            'segments': [
-                {
-                    'start': seg['start'],
-                    'end': seg['end'],
-                    'text': seg['text']
-                }
-                for seg in result.get('segments', [])
-            ]
-        }
-        logger.info(f"Transcription successful: {response['text'][:50]}...")
-        return jsonify(response), 200
+            transcribe_params['language'] = language
+
+        result = model.transcribe(str(temp_audio_path), **transcribe_params)
+
+        # Collect segments
+        segment_list = []
+        for seg in result.get('segments', []):
+            segment_list.append({
+                'start': seg['start'],
+                'end': seg['end'],
+                'text': seg['text'].strip()
+            })
+
+        full_text = result['text'].strip()
+        detected_language = result.get('language', language or 'unknown')
+        logger.info(f"Transcription successful: {full_text[:50]}...")
+
+        return jsonify({
+            'text': full_text,
+            'language': detected_language,
+            'segments': segment_list
+        }), 200
+
     except Exception as e:
         logger.error(f"Error during transcription: {str(e)}")
-        # Xóa file tạm thời nếu có lỗi
-        if temp_audio_path and os.path.exists(str(temp_audio_path)):
-            try:
-                os.unlink(str(temp_audio_path))
-            except:
-                pass
         return jsonify({'error': str(e)}), 500
+    finally:
+        # Xóa file tạm
+        if temp_audio_path and temp_audio_path.exists():
+            temp_audio_path.unlink(missing_ok=True)
 
 if __name__ == '__main__':
+    from waitress import serve
+
     print("=" * 60)
-    print("Whisper Server Starting...")
-    print("Model: medium")
+    print("Whisper Server Starting (openai-whisper + waitress)")
+    print(f"Device: {DEVICE} | FP16: {FP16}")
+    print(f"CPU threads: {os.cpu_count()}")
     print("Port: 5000")
     print("Endpoints:")
     print("  - GET  /health")
     print("  - POST /transcribe")
     print("  - POST /transcribe-file")
     print("=" * 60)
-    app.run(host='0.0.0.0', port=5000, debug=False)
+
+    # Waitress: production WSGI server, multi-threaded, Windows compatible
+    serve(app, host='0.0.0.0', port=5000, threads=4)
