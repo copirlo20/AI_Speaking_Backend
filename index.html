@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Speaking Test - Thi Nói Tiếng Anh</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- ==================== SCREEN 1: WELCOME ==================== -->
+    <div id="screen-welcome" class="screen active">
+        <div class="welcome-container">
+            <div class="welcome-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <circle cx="32" cy="32" r="30" fill="url(#grad1)" />
+                            <path d="M20 38V26a12 12 0 0 1 24 0v12" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                            <rect x="18" y="34" width="28" height="8" rx="4" fill="#fff" opacity="0.3"/>
+                            <line x1="32" y1="42" x2="32" y2="50" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="26" y1="50" x2="38" y2="50" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="grad1" x1="0" y1="0" x2="64" y2="64">
+                                    <stop offset="0%" stop-color="#667eea"/>
+                                    <stop offset="100%" stop-color="#764ba2"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h1>LỮ ĐOÀN 162</h1>
+                    <p class="subtitle">Ứng dụng AI kiểm tra giao tiếp tiếng anh</p>
+                </div>
+            </div>
+
+            <div class="exam-selection-section">
+                <h2>Chọn đề thi</h2>
+                <div class="search-bar">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="exam-search" placeholder="Tìm kiếm đề thi..." oninput="filterExams()">
+                </div>
+                <div id="exam-list" class="exam-list">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Đang tải danh sách đề thi...</p>
+                    </div>
+                </div>
+                <div id="exam-pagination" class="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCREEN 2: REGISTRATION ==================== -->
+    <div id="screen-register" class="screen">
+        <div class="register-container">
+            <button class="btn-back" onclick="goToScreen('screen-welcome')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Quay lại
+            </button>
+
+            <div class="register-card">
+                <div class="register-header">
+                    <div class="register-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <h2>Thông tin thí sinh</h2>
+                    <p>Vui lòng điền thông tin trước khi bắt đầu thi</p>
+                </div>
+
+                <div id="selected-exam-info" class="selected-exam-info"></div>
+
+                <form id="register-form" onsubmit="startExam(event)">
+                    <div class="form-group">
+                        <label for="student-name">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Họ và tên <span class="required">*</span>
+                        </label>
+                        <input type="text" id="student-name" placeholder="Nhập họ và tên đầy đủ" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="student-org">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M10 11h2M10 15h2M14 11h2M14 15h2M18 11h2M18 15h2M8 7V3h8v4"/>
+                            </svg>
+                            Đơn vị
+                        </label>
+                        <input type="text" id="student-org" placeholder="Tên đơn vị công tác">
+                    </div>
+                    <button type="submit" class="btn-primary btn-start">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        Bắt đầu thi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCREEN 3: EXAM ==================== -->
+    <div id="screen-exam" class="screen">
+        <div class="exam-container">
+            <!-- Top bar -->
+            <div class="exam-topbar">
+                <div class="exam-topbar-left">
+                    <h3 id="exam-title-bar">Đề thi</h3>
+                    <span id="student-name-bar" class="student-badge"></span>
+                </div>
+                <div class="exam-topbar-right">
+                    <div class="progress-info">
+                        <span id="progress-text">0 / 0</span>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <button class="btn-finish" onclick="confirmFinishExam()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        Nộp bài
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question navigator -->
+            <div class="question-nav-bar">
+                <div id="question-nav-pills" class="question-nav-pills"></div>
+            </div>
+
+            <!-- Question content -->
+            <div class="exam-body">
+                <div class="question-panel">
+                    <div class="question-header">
+                        <span id="question-number" class="question-badge">Câu 1</span>
+                        <span id="question-level" class="level-badge"></span>
+                    </div>
+                    <div id="question-content" class="question-content"></div>
+                </div>
+
+                <!-- Recording panel -->
+                <div class="answer-panel">
+                    <div id="recording-section" class="recording-section">
+                        <div class="recording-visual">
+                            <div id="mic-button" class="mic-button" onclick="toggleRecording()">
+                                <svg id="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                </svg>
+                                <svg id="stop-icon" class="hidden" viewBox="0 0 24 24" fill="currentColor">
+                                    <rect x="6" y="6" width="12" height="12" rx="2"/>
+                                </svg>
+                            </div>
+                            <div id="recording-wave" class="recording-wave hidden">
+                                <span></span><span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                        </div>
+                        <p id="recording-status" class="recording-status">Nhấn vào micro để bắt đầu ghi âm</p>
+                        <p id="recording-timer" class="recording-timer hidden">00:00</p>
+
+                        <!-- Audio playback -->
+                        <div id="audio-playback" class="audio-playback hidden">
+                            <audio id="audio-player" controls></audio>
+                            <div class="audio-actions">
+                                <button class="btn-icon btn-re-record" onclick="reRecord()" title="Ghi âm lại">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="1 4 1 10 7 10"/>
+                                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                                    </svg>
+                                    Ghi lại
+                                </button>
+                                <button class="btn-primary btn-submit-answer" onclick="submitCurrentAnswer()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"/>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                    </svg>
+                                    Nộp câu trả lời
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submitting indicator -->
+                    <div id="submitting-section" class="submitting-section hidden">
+                        <div class="submitting-animation">
+                            <div class="spinner large"></div>
+                            <p>Đang xử lý câu trả lời...</p>
+                            <span class="submitting-detail">AI đang phân tích bài nói của bạn</span>
+                        </div>
+                    </div>
+
+                    <!-- Result/Feedback panel -->
+                    <div id="feedback-section" class="feedback-section hidden">
+                        <div class="feedback-card">
+                            <div class="feedback-header">
+                                <h3>Kết quả chấm điểm</h3>
+                            </div>
+                            <div class="feedback-score-container">
+                                <div id="feedback-score-ring" class="score-ring">
+                                    <svg viewBox="0 0 120 120">
+                                        <circle cx="60" cy="60" r="52" fill="none" stroke="#e9ecef" stroke-width="8"/>
+                                        <circle id="score-circle" cx="60" cy="60" r="52" fill="none" stroke="#667eea" stroke-width="8" stroke-dasharray="326.73" stroke-dashoffset="326.73" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                                    </svg>
+                                    <div class="score-value">
+                                        <span id="feedback-score">0</span>
+                                        <small>/10</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="feedback-details">
+                                <div class="feedback-item">
+                                    <h4>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        Nội dung đã nói
+                                    </h4>
+                                    <p id="feedback-transcribed" class="transcribed-text"></p>
+                                </div>
+                                <div class="feedback-item">
+                                    <h4>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="12" y1="16" x2="12" y2="12"/>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                        </svg>
+                                        Nhận xét từ AI
+                                    </h4>
+                                    <div id="feedback-comment" class="feedback-text"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom navigation -->
+            <div class="exam-bottom-nav">
+                <button id="btn-prev" class="btn-nav" onclick="goToQuestion(currentQuestionIndex - 1)" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Câu trước
+                </button>
+                <button id="btn-next" class="btn-nav btn-nav-next" onclick="goToQuestion(currentQuestionIndex + 1)">
+                    Câu tiếp
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCREEN 4: RESULTS ==================== -->
+    <div id="screen-results" class="screen">
+        <div class="results-container">
+            <div class="results-header">
+                <div class="results-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <h2>Kết quả bài thi</h2>
+                <p id="results-student-info"></p>
+            </div>
+
+            <div class="results-summary">
+                <div class="summary-card total-score">
+                    <div class="summary-label">Tổng điểm</div>
+                    <div id="results-total-score" class="summary-value">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Đã trả lời</div>
+                    <div id="results-answered" class="summary-value">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Tổng câu hỏi</div>
+                    <div id="results-total" class="summary-value">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Hoàn thành</div>
+                    <div id="results-completion" class="summary-value">0%</div>
+                </div>
+            </div>
+
+            <div class="results-detail-section">
+                <h3>Chi tiết từng câu</h3>
+                <div id="results-answers-list" class="results-answers-list"></div>
+            </div>
+
+            <div class="results-actions">
+                <button class="btn-primary" onclick="goToScreen('screen-welcome'); resetAll();">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"/>
+                    </svg>
+                    Về trang chủ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: CONFIRM FINISH ==================== -->
+    <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-icon warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <h3>Xác nhận nộp bài</h3>
+            <p id="modal-message">Bạn có chắc chắn muốn nộp bài? Các câu chưa trả lời sẽ không được chấm điểm.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal()">Hủy</button>
+                <button class="btn-primary btn-danger" onclick="finishExam()">Nộp bài</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST NOTIFICATIONS ==================== -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
